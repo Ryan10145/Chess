@@ -1,5 +1,7 @@
 package main;
 
+import components.Board;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -18,9 +20,11 @@ public class MainPanel extends JPanel implements Runnable, MouseListener, MouseM
     private BufferedImage image;
     private Graphics2D g2d;
 
+    private Board board;
+
     private static final int FPS = 60;
 
-    public MainPanel()
+    MainPanel()
     {
         super();
         this.setFocusable(true);
@@ -74,26 +78,30 @@ public class MainPanel extends JPanel implements Runnable, MouseListener, MouseM
         }
     }
 
-    public void init()
+    private void init()
     {
         image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
         g2d = (Graphics2D) image.getGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
         running = true;
+
+        board = new Board(60, 60);
     }
 
-    public void update()
+    private void update()
     {
-
+        board.update();
     }
 
-    public void draw()
+    private void draw()
     {
-
+        g2d.setColor(Color.LIGHT_GRAY);
+        g2d.fillRect(0, 0, WIDTH, HEIGHT);
+        board.draw(g2d);
     }
 
-    public void drawToScreen()
+    private void drawToScreen()
     {
         Graphics g = getGraphics();
         g.drawImage(image, 0, 0, WIDTH, HEIGHT, null);
@@ -107,12 +115,12 @@ public class MainPanel extends JPanel implements Runnable, MouseListener, MouseM
 
     public void mousePressed(MouseEvent e)
     {
-
+        board.mousePressed(e);
     }
 
     public void mouseReleased(MouseEvent e)
     {
-
+        board.mouseReleased(e);
     }
 
     public void mouseEntered(MouseEvent e)
@@ -127,11 +135,11 @@ public class MainPanel extends JPanel implements Runnable, MouseListener, MouseM
 
     public void mouseDragged(MouseEvent e)
     {
-
+        board.mouseDragged(e);
     }
 
     public void mouseMoved(MouseEvent e)
     {
-
+        board.mouseMoved(e);
     }
 }
