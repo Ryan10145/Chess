@@ -9,8 +9,11 @@ import java.awt.geom.AffineTransform;
 public class Board
 {
     private Piece[][] pieces;
+    private Piece currentPiece;
+
     private final int TILE_LENGTH = 60;
     private int x, y;
+    private int currentPieceX, currentPieceY;
 
     public Board(int x, int y)
     {
@@ -51,14 +54,14 @@ public class Board
         pieces[6][7] = new Knight(false, 6, 7);
         pieces[7][7] = new Rook(false, 7, 7);
 
-        pieces[0][6] = new Pawn(false, 0, 7);
-        pieces[1][6] = new Pawn(false, 1, 7);
-        pieces[2][6] = new Pawn(false, 2, 7);
-        pieces[3][6] = new Pawn(false, 3, 7);
-        pieces[4][6] = new Pawn(false, 4, 7);
-        pieces[5][6] = new Pawn(false, 5, 7);
-        pieces[6][6] = new Pawn(false, 6, 7);
-        pieces[7][6] = new Pawn(false, 7, 7);
+        pieces[0][6] = new Pawn(false, 0, 6);
+        pieces[1][6] = new Pawn(false, 1, 6);
+        pieces[2][6] = new Pawn(false, 2, 6);
+        pieces[3][6] = new Pawn(false, 3, 6);
+        pieces[4][6] = new Pawn(false, 4, 6);
+        pieces[5][6] = new Pawn(false, 5, 6);
+        pieces[6][6] = new Pawn(false, 6, 6);
+        pieces[7][6] = new Pawn(false, 7, 6);
     }
 
     public void update()
@@ -85,26 +88,69 @@ public class Board
             }
         }
 
+        if(currentPiece != null) currentPiece.draw(g2d, TILE_LENGTH, currentPieceX - x, currentPieceY - y);
+
         g2d.setTransform(transform);
     }
 
     public void mousePressed(MouseEvent e)
     {
+        int mouseCol = (e.getX() - x) / TILE_LENGTH;
+        int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
+        if(mouseCol >= 0 && mouseCol < pieces.length &&
+                mouseRow >= 0 && mouseRow < pieces[0].length)
+        {
+            if(currentPiece == null && pieces[mouseCol][mouseRow] != null)
+            {
+                currentPiece = pieces[mouseCol][mouseRow];
+                pieces[mouseCol][mouseRow] = null;
+
+                currentPieceX = e.getX() - TILE_LENGTH / 2;
+                currentPieceY = e.getY() - TILE_LENGTH / 2;
+            }
+        }
     }
 
     public void mouseReleased(MouseEvent e)
     {
+        int mouseCol = (e.getX() - x) / TILE_LENGTH;
+        int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
+        if(mouseCol >= 0 && mouseCol < pieces.length &&
+                mouseRow >= 0 && mouseRow < pieces[0].length)
+        {
+            if(currentPiece != null && pieces[mouseCol][mouseRow] == null)
+            {
+                pieces[mouseCol][mouseRow] = currentPiece;
+                currentPiece.setPosition(mouseCol, mouseRow);
+            }
+            else if(currentPiece != null && pieces[mouseCol][mouseRow] != null)
+            {
+                pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
+            }
+
+            currentPiece = null;
+        }
     }
 
     public void mouseDragged(MouseEvent e)
     {
+        int mouseCol = (e.getX() - x) / TILE_LENGTH;
+        int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
+        if(currentPiece != null)
+        {
+            currentPieceX = e.getX() - TILE_LENGTH / 2;
+            currentPieceY = e.getY() - TILE_LENGTH / 2;
+        }
+
+        System.out.println(pieces[mouseCol][mouseRow]);
     }
 
     public void mouseMoved(MouseEvent e)
     {
-
+        int mouseCol = (e.getX() - x) / TILE_LENGTH;
+        int mouseRow = (e.getY() - y) / TILE_LENGTH;
     }
 }

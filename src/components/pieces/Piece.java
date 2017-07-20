@@ -16,8 +16,29 @@ public abstract class Piece
         this.row = row;
     }
 
+    public void setPosition(int col, int row)
+    {
+        this.col = col;
+        this.row = row;
+    }
+
     public void draw(Graphics2D g2d, int tileLength)
     {
         g2d.drawImage(image, col * tileLength, row * tileLength, tileLength, tileLength, null);
+    }
+
+    public void draw(Graphics2D g2d, int tileLength, int x, int y)
+    {
+        g2d.drawImage(image, x, y, tileLength, tileLength, null);
+    }
+
+    public int getCol()
+    {
+        return col;
+    }
+
+    public int getRow()
+    {
+        return row;
     }
 }
