@@ -8,6 +8,11 @@ import java.awt.geom.AffineTransform;
 
 public class Board
 {
+    //How to make it so that you can click on a piece and it will show possible moves.
+    // If you click on a piece, then it becomes the current piece. However, if the drag flag is never activated,
+    // and the mouse is released, then set it into the mode where clicking on a highlighted spot will move it there.
+    //If the user does not click a highlighted spot, then the mode is canceled.
+
     private Piece[][] pieces;
     private Piece currentPiece;
 
@@ -49,10 +54,10 @@ public class Board
         pieces[1][7] = new Knight(false, 1, 7);
         pieces[2][7] = new Bishop(false, 2, 7);
         pieces[3][7] = new Queen(false, 3, 7);
-        pieces[4][7] = new King(false, 4, 7);
+        pieces[4][4] = new King(false, 4, 4);
         pieces[5][7] = new Bishop(false, 5, 7);
         pieces[6][7] = new Knight(false, 6, 7);
-        pieces[7][7] = new Rook(false, 7, 7);
+        pieces[7][4] = new Rook(false, 7, 4);
 
         pieces[0][6] = new Pawn(false, 0, 6);
         pieces[1][6] = new Pawn(false, 1, 6);
@@ -98,16 +103,18 @@ public class Board
         int mouseCol = (e.getX() - x) / TILE_LENGTH;
         int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
+        //Check if the mouse is within the board
         if(mouseCol >= 0 && mouseCol < pieces.length &&
                 mouseRow >= 0 && mouseRow < pieces[0].length)
         {
+            //Check if the square has a piece
             if(currentPiece == null && pieces[mouseCol][mouseRow] != null)
             {
+                //Pick up the piece and remove it
                 currentPiece = pieces[mouseCol][mouseRow];
                 pieces[mouseCol][mouseRow] = null;
 
-                currentPieceX = e.getX() - TILE_LENGTH / 2;
-                currentPieceY = e.getY() - TILE_LENGTH / 2;
+                setCurrentPieceLocation(e);
             }
         }
     }
@@ -117,21 +124,35 @@ public class Board
         int mouseCol = (e.getX() - x) / TILE_LENGTH;
         int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
+        //Check if the mouse is within the board
         if(mouseCol >= 0 && mouseCol < pieces.length &&
                 mouseRow >= 0 && mouseRow < pieces[0].length)
         {
-            if(currentPiece != null && pieces[mouseCol][mouseRow] == null)
+            if(currentPiece != null)
             {
-                pieces[mouseCol][mouseRow] = currentPiece;
-                currentPiece.setPosition(mouseCol, mouseRow);
-            }
-            else if(currentPiece != null && pieces[mouseCol][mouseRow] != null)
-            {
-                pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
-            }
+                currentPiece.calculateMoves(pieces);
 
-            currentPiece = null;
+                //Check if the drop location is clear and a valid position
+                if(currentPiece.isValidMove(mouseCol, mouseRow))
+                {
+                    pieces[mouseCol][mouseRow] = currentPiece;
+                    currentPiece.setPosition(mouseCol, mouseRow);
+
+                    currentPiece.setMoved();
+                }
+                //Otherwise, move the piece back to its original position
+                else
+                {
+                    pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
+                }
+            }
         }
+        else
+        {
+            pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
+        }
+
+        currentPiece = null;
     }
 
     public void mouseDragged(MouseEvent e)
@@ -139,18 +160,18 @@ public class Board
         int mouseCol = (e.getX() - x) / TILE_LENGTH;
         int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
-        if(currentPiece != null)
-        {
-            currentPieceX = e.getX() - TILE_LENGTH / 2;
-            currentPieceY = e.getY() - TILE_LENGTH / 2;
-        }
-
-        System.out.println(pieces[mouseCol][mouseRow]);
+        if(currentPiece != null) setCurrentPieceLocation(e);
     }
 
     public void mouseMoved(MouseEvent e)
     {
         int mouseCol = (e.getX() - x) / TILE_LENGTH;
         int mouseRow = (e.getY() - y) / TILE_LENGTH;
+    }
+
+    private void setCurrentPieceLocation(MouseEvent e)
+    {
+        currentPieceX = e.getX() - TILE_LENGTH / 2;
+        currentPieceY = e.getY() - TILE_LENGTH / 2;
     }
 }
