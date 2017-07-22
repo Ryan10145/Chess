@@ -15,6 +15,8 @@ public class Knight extends Piece
     public void calculateMoves(Piece[][] board)
     {
         possibleMoves.clear();
+
+        //Add locations on left side
         if(col >= 2)
         {
             if(row > 0)
@@ -26,6 +28,7 @@ public class Knight extends Piece
                 if(canTake(board[col - 2][row + 1])) possibleMoves.add(new int[] {col - 2, row + 1});
             }
         }
+        //Add locations on top
         if(row >= 2)
         {
             if(col > 0)
@@ -37,6 +40,7 @@ public class Knight extends Piece
                 if(canTake(board[col + 1][row - 2])) possibleMoves.add(new int[] {col + 1, row - 2});
             }
         }
+        //Add locations on right side
         if(col < board.length - 2)
         {
             if(row > 0)
@@ -48,6 +52,7 @@ public class Knight extends Piece
                 if(canTake(board[col + 2][row + 1])) possibleMoves.add(new int[] {col + 2, row + 1});
             }
         }
+        //Add locations on bottom
         if(row < board[0].length - 2)
         {
             if(col > 0)

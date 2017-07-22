@@ -16,8 +16,12 @@ public class Rook extends Piece
     {
         possibleMoves.clear();
 
+        //Loop through columns from current column to left side
         for(int checkCol = col; checkCol >= 0; checkCol--)
         {
+            //Check if the location is clear, if it is add it
+            //Otherwise, if the location's piece is opp. side, then add it and stop looping
+            //Otherwise, if the location's piece is same side, then stop looping
             if(board[checkCol][row] == null) possibleMoves.add(new int[]{checkCol, row});
             else if(canTake(board[checkCol][row]))
             {
@@ -26,8 +30,12 @@ public class Rook extends Piece
             }
             else break;
         }
+        //loop through columns from current column to right side
         for(int checkCol = col; checkCol < board.length; checkCol++)
         {
+            //Check if the location is clear, if it is add it
+            //Otherwise, if the location's piece is opp. side, then add it and stop looping
+            //Otherwise, if the location's piece is same side, then stop looping
             if(board[checkCol][row] == null) possibleMoves.add(new int[]{checkCol, row});
             else if(canTake(board[checkCol][row]))
             {
@@ -37,8 +45,12 @@ public class Rook extends Piece
             else break;
         }
 
+        //Loop through rows from current row to top
         for(int checkRow = row; checkRow >= 0; checkRow--)
         {
+            //Check if the location is clear, if it is add it
+            //Otherwise, if the location's piece is opp. side, then add it and stop looping
+            //Otherwise, if the location's piece is same side, then stop looping
             if(board[col][checkRow] == null) possibleMoves.add(new int[]{col, checkRow});
             else if(canTake(board[col][checkRow]))
             {
@@ -47,8 +59,12 @@ public class Rook extends Piece
             }
             else break;
         }
+        //Loop through rows from current row to bottom row
         for(int checkRow = row; checkRow < board.length; checkRow++)
         {
+            //Check if the location is clear, if it is add it
+            //Otherwise, if the location's piece is opp. side, then add it and stop looping
+            //Otherwise, if the location's piece is same side, then stop looping
             if(board[col][checkRow] == null) possibleMoves.add(new int[]{col, checkRow});
             else if(canTake(board[col][checkRow]))
             {
