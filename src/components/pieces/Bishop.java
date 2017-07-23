@@ -97,5 +97,7 @@ public class Bishop extends Piece
 
             if(!(checkUpwardsDiagonal || checkDownwardsDiagonal)) break;
         }
+
+        filterPossibleMoves();
     }
 }

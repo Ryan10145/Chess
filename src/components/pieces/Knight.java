@@ -64,5 +64,7 @@ public class Knight extends Piece
                 if(canTake(board[col + 1][row + 2])) possibleMoves.add(new int[] {col + 1, row + 2});
             }
         }
+
+        filterPossibleMoves();
     }
 }

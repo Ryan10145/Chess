@@ -155,5 +155,7 @@ public class Queen extends Piece
             }
             else break;
         }
+
+        filterPossibleMoves();
     }
 }

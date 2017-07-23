@@ -15,6 +15,8 @@ public class Pawn extends Piece
     public void calculateMoves(Piece[][] board)
     {
         //TODO Promotion
+        //TODO En Passant
+
         possibleMoves.clear();
 
         //If the piece is black, then move it downwards instead of upwards
@@ -99,5 +101,7 @@ public class Pawn extends Piece
                 }
             }
         }
+
+        filterPossibleMoves();
     }
 }

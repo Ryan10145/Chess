@@ -55,5 +55,7 @@ public class King extends Piece
         {
             if(canTake(board[col][row + 1])) possibleMoves.add(new int[]{col, row + 1});
         }
+
+        filterPossibleMoves();
     }
 }

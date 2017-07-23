@@ -3,6 +3,7 @@ package components.pieces;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public abstract class Piece
 {
@@ -30,6 +31,12 @@ public abstract class Piece
     }
 
     public abstract void calculateMoves(Piece[][] board);
+
+    //Goes through the possible moves and removes the current space if it exists
+    void filterPossibleMoves()
+    {
+        possibleMoves.removeIf(move -> move[0] == col && move[1] == row);
+    }
 
     public ArrayList<int[]> getMoves()
     {
