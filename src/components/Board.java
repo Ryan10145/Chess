@@ -10,14 +10,15 @@ public class Board
 {
     private Piece[][] pieces;
     private Piece currentPiece;
+    private int hoverCol;
+    private int hoverRow;
 
     private final int TILE_LENGTH = 60;
     private int x, y;
     private int currentPieceX, currentPieceY;
     private boolean selectFlag;
-    private boolean startedDragging;
+    private boolean secondTurn;
 
-    //TODO Turns
     public Board(int x, int y)
     {
         this.x = x;
@@ -69,7 +70,7 @@ public class Board
 
     public void update()
     {
-        System.out.println(selectFlag);
+
     }
 
     public void draw(Graphics2D g2d)
@@ -77,6 +78,8 @@ public class Board
         AffineTransform transform = g2d.getTransform();
         g2d.translate(x, y);
 
+        //Flag to make sure that the checks for the draw hover is only drawn when not found yet
+        boolean drewHover = false;
         for(int col = 0; col < pieces.length; col++)
         {
             for(int row = 0; row < pieces[0].length; row++)
@@ -86,21 +89,41 @@ public class Board
 
                 g2d.fillRect(col * TILE_LENGTH, row * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
 
+                //Draw the hover if it is not drawn yet
+                if(hoverCol != -1 && hoverRow != -1)
+                {
+                    Piece hoverPiece = pieces[hoverCol][hoverRow];
+                    if(!drewHover && !selectFlag && hoverPiece != null)
+                    {
+                        if(hoverPiece.isSecond() == this.secondTurn &&
+                                hoverPiece.getCol() == col && hoverPiece.getRow() == row)
+                        {
+                            g2d.setColor(new Color(152, 251, 152, 150));
+                            g2d.fillRect(col * TILE_LENGTH, row * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
+                            drewHover = true;
+                        }
+                    }
+                }
+
                 Piece piece = pieces[col][row];
                 if(piece != null) piece.draw(g2d, TILE_LENGTH);
             }
         }
 
+        //Draw the select mode
         if(selectFlag)
         {
+            //Color the current piece square
             g2d.setColor(new Color(30, 144, 255, 150));
             g2d.fillRect(currentPiece.getCol() * TILE_LENGTH, currentPiece.getRow() * TILE_LENGTH,
                     TILE_LENGTH, TILE_LENGTH);
 
-            g2d.setColor(new Color(255, 102, 102, 150));
+            //Color all possible locations
             currentPiece.calculateMoves(pieces);
             for(int[] location : currentPiece.getMoves())
             {
+                if(location[0] == hoverCol && location[1] == hoverRow) g2d.setColor(new Color(152, 251, 152, 150));
+                else g2d.setColor(new Color(255, 102, 102, 150));
                 g2d.fillRect(location[0] * TILE_LENGTH, location[1] * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
             }
         }
@@ -124,23 +147,31 @@ public class Board
                 //Check if the square has a piece
                 if(currentPiece == null && pieces[mouseCol][mouseRow] != null)
                 {
-                    //Pick up the piece and remove it
-                    currentPiece = pieces[mouseCol][mouseRow];
-                    pieces[mouseCol][mouseRow] = null;
+                    if(pieces[mouseCol][mouseRow].isSecond() == secondTurn)
+                    {
+                        //Pick up the piece and remove it
+                        currentPiece = pieces[mouseCol][mouseRow];
+                        pieces[mouseCol][mouseRow] = null;
 
-                    setCurrentPieceLocation(x + currentPiece.getCol() * TILE_LENGTH + TILE_LENGTH / 2,
-                            y + currentPiece.getRow() * TILE_LENGTH + TILE_LENGTH / 2);
+                        setCurrentPieceLocation(x + currentPiece.getCol() * TILE_LENGTH + TILE_LENGTH / 2,
+                                y + currentPiece.getRow() * TILE_LENGTH + TILE_LENGTH / 2);
+                    }
                 }
             }
+            //Selection Mode
             else
             {
+                //Check if the clicked location is a valid location
                 currentPiece.calculateMoves(pieces);
                 if(currentPiece.isValidMove(mouseCol, mouseRow))
                 {
                     pieces[mouseCol][mouseRow] = currentPiece;
                     currentPiece.setPosition(mouseCol, mouseRow);
                     currentPiece.setMoved();
+
+                    secondTurn = !secondTurn;
                 }
+                //Otherwise, deactivate the select mode and revert the position of the current piece
                 else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
 
                 currentPiece = null;
@@ -178,6 +209,7 @@ public class Board
                     currentPiece.setPosition(mouseCol, mouseRow);
 
                     currentPiece.setMoved();
+                    secondTurn = !secondTurn;
                 }
                 //Otherwise, move the piece back to its original position
                 else
@@ -224,8 +256,20 @@ public class Board
 
     public void mouseMoved(MouseEvent e)
     {
-//        int mouseCol = (e.getX() - x) / TILE_LENGTH;
-//        int mouseRow = (e.getY() - y) / TILE_LENGTH;
+        int mouseCol = (e.getX() - x) / TILE_LENGTH;
+        int mouseRow = (e.getY() - y) / TILE_LENGTH;
+
+        if(mouseCol >= 0 && mouseCol < pieces.length &&
+                mouseRow >= 0 && mouseRow < pieces[0].length)
+        {
+            hoverCol = mouseCol;
+            hoverRow = mouseRow;
+        }
+        else
+        {
+            hoverCol = -1;
+            hoverRow = -1;
+        }
     }
 
     private void setCurrentPieceLocation(int x, int y)

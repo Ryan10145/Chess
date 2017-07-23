@@ -3,16 +3,10 @@ package components.pieces;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 public abstract class Piece
 {
-    //How to structure the pieces
-    //Each piece will have a method that takes in an array of pieces, and it uses it to return a list of locations it can move to
-    //Then, the release checker will simply check if the moving position is one of the possible values, and if it is,
-    //then it will move. Otherwise it will go back to its original positon
-
-    boolean black;
+    boolean second;
     int col, row;
 
     BufferedImage image;
@@ -20,9 +14,9 @@ public abstract class Piece
     ArrayList<int[]> possibleMoves;
     boolean hasMoved;
 
-    Piece(boolean black, int col, int row)
+    Piece(boolean second, int col, int row)
     {
-        this.black = black;
+        this.second = second;
         this.col = col;
         this.row = row;
 
@@ -81,11 +75,16 @@ public abstract class Piece
 
     boolean canTake(Piece piece)
     {
-        return piece == null || piece.black != this.black;
+        return piece == null || piece.second != this.second;
     }
 
     public void setMoved()
     {
         hasMoved = true;
+    }
+
+    public boolean isSecond()
+    {
+        return second;
     }
 }

@@ -19,8 +19,8 @@ public class Pawn extends Piece
 
         possibleMoves.clear();
 
-        //If the piece is black, then move it downwards instead of upwards
-        if(black)
+        //If the piece is second, then move it downwards instead of upwards
+        if(second)
         {
             //Check to make sure that the piece is not in last row
             if(row < board[0].length - 1)
@@ -46,7 +46,7 @@ public class Pawn extends Piece
                     //Check if there is an opposing piece on a diagonal, and add it
                     if(board[col - 1][row + 1] != null)
                     {
-                        if(board[col - 1][row + 1].black != this.black) possibleMoves.add(new int[]{col - 1, row + 1});
+                        if(board[col - 1][row + 1].second != this.second) possibleMoves.add(new int[]{col - 1, row + 1});
                     }
                 }
                 //If the piece is not on the right side
@@ -55,7 +55,7 @@ public class Pawn extends Piece
                     //Check if there is an opposing piece on a diagonal, and add it
                     if(board[col + 1][row + 1] != null)
                     {
-                        if(board[col + 1][row + 1].black != this.black) possibleMoves.add(new int[]{col + 1, row + 1});
+                        if(board[col + 1][row + 1].second != this.second) possibleMoves.add(new int[]{col + 1, row + 1});
                     }
                 }
             }
@@ -87,7 +87,7 @@ public class Pawn extends Piece
                     //Check if there is an opposing piece on a diagonal, and add it
                     if(board[col - 1][row - 1] != null)
                     {
-                        if(board[col - 1][row - 1].black != this.black) possibleMoves.add(new int[]{col - 1, row - 1});
+                        if(board[col - 1][row - 1].second != this.second) possibleMoves.add(new int[]{col - 1, row - 1});
                     }
                 }
                 //If the piece is not on the right side
@@ -96,7 +96,7 @@ public class Pawn extends Piece
                     //Check if there is an opposing piece on a diagonal, and add it
                     if(board[col + 1][row - 1] != null)
                     {
-                        if(board[col + 1][row - 1].black != this.black) possibleMoves.add(new int[]{col + 1, row - 1});
+                        if(board[col + 1][row - 1].second != this.second) possibleMoves.add(new int[]{col + 1, row - 1});
                     }
                 }
             }
