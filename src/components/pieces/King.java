@@ -15,8 +15,6 @@ public class King extends Piece
     public void calculateMoves(Piece[][] board)
     {
         //TODO Castling
-        //TODO Limiting Moves Based On Checks
-
         possibleMoves.clear();
 
         //Add all locations on the left side
@@ -56,6 +54,46 @@ public class King extends Piece
             if(canTake(board[col][row + 1])) possibleMoves.add(new int[]{col, row + 1});
         }
 
-        filterPossibleMoves();
+        filterPossibleMoves(board);
+    }
+
+    private void filterPossibleMoves(Piece[][] board)
+    {
+        super.filterPossibleMoves();
+        for(Piece[] pieceA : board)
+        {
+            for(Piece piece : pieceA)
+            {
+                //TODO Optimize this by checking only if the piece is within striking range
+                // w/ casework that checks the type of the piece
+
+                if(piece != null)
+                {
+                    if(piece.second != this.second)
+                    {
+                        if(piece instanceof Pawn)
+                        {
+                            possibleMoves.removeIf(possibleMove -> Math.abs(possibleMove[0] - piece.col) <= 1 &&
+                                    ((piece.second && possibleMove[1] == piece.row + 1) ||
+                                            (!piece.second && possibleMove[1] == piece.row - 1)));
+                        }
+                        else if(piece instanceof King)
+                        {
+                            possibleMoves.removeIf(possibleMoves -> Math.abs(possibleMoves[0] - piece.col) <= 1 &&
+                                    Math.abs(possibleMoves[1] - piece.row) <= 1);
+                        }
+                        else
+                        {
+                            piece.calculateMoves(board);
+                            for(int[] location : piece.possibleMoves)
+                            {
+                                possibleMoves.removeIf(possibleMove -> possibleMove[0] == location[0] &&
+                                        possibleMove[1] == location[1]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

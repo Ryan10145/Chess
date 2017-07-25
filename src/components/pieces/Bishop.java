@@ -21,7 +21,7 @@ public class Bishop extends Piece
         boolean checkDownwardsDiagonal = true;
 
         //Go through a variable that automatically goes from the column to the left side
-        for(int check = 0; check <= col; check++)
+        for(int check = 1; check <= col; check++)
         {
             //Check if the variable has gone too far, and set flags
             if(row - check < 0) checkUpwardsDiagonal = false;
@@ -62,7 +62,7 @@ public class Bishop extends Piece
         checkDownwardsDiagonal = true;
 
         //Go through a variable that leads from column to right side
-        for(int check = 0; check < board.length - col; check++)
+        for(int check = 1; check < board.length - col; check++)
         {
             //Check going too far and set flags
             if(row - check < 0) checkUpwardsDiagonal = false;
