@@ -71,7 +71,32 @@ public class Board
 
     public void update()
     {
-        System.out.println(isCheck(pieces, secondTurn));
+        if(isCheck(pieces, secondTurn))
+        {
+            boolean checkmate = true;
+            for(Piece[] pieceA : pieces)
+            {
+                for(Piece piece : pieceA)
+                {
+                    if(piece != null)
+                    {
+                        if(piece.isSecond() == secondTurn)
+                        {
+                            piece.calculateMoves(pieces);
+                            if(!piece.getMoves().isEmpty())
+                            {
+                                checkmate = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if(checkmate) break;
+            }
+
+            if(checkmate) System.out.println(secondTurn ? "White Wins!" : "Black Wins!");
+        }
     }
 
     public void draw(Graphics2D g2d)
