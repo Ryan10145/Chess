@@ -277,13 +277,13 @@ public class Board
                     pieces[promotingCol][promotingRow] = new Bishop(secondTurn, promotingCol, promotingRow);
                     break;
                 case 1:
-                    pieces[promotingCol][promotingRow] = new Bishop(secondTurn, promotingCol, promotingRow);
+                    pieces[promotingCol][promotingRow] = new Knight(secondTurn, promotingCol, promotingRow);
                     break;
                 case 2:
-                    pieces[promotingCol][promotingRow] = new Bishop(secondTurn, promotingCol, promotingRow);
+                    pieces[promotingCol][promotingRow] = new Rook(secondTurn, promotingCol, promotingRow);
                      break;
                 case 3:
-                    pieces[promotingCol][promotingRow] = new Bishop(secondTurn, promotingCol, promotingRow);
+                    pieces[promotingCol][promotingRow] = new Queen(secondTurn, promotingCol, promotingRow);
                     break;
                 default:
                     return;
