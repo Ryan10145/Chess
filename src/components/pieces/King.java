@@ -71,7 +71,7 @@ public class King extends Piece
                     {
                         if(piece instanceof Pawn)
                         {
-                            possibleMoves.removeIf(possibleMove -> Math.abs(possibleMove[0] - piece.col) <= 1 &&
+                            possibleMoves.removeIf(possibleMove -> Math.abs(possibleMove[0] - piece.col) == 1 &&
                                     ((piece.second && possibleMove[1] == piece.row + 1) ||
                                             (!piece.second && possibleMove[1] == piece.row - 1)));
                         }
