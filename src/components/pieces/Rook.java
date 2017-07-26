@@ -12,7 +12,7 @@ public class Rook extends Piece
         else this.image = Images.WHITE.ROOK;
     }
 
-    public void calculateMoves(Piece[][] board)
+    public void calculateMovesUnfiltered(Piece[][] board)
     {
         possibleMoves.clear();
 
@@ -73,7 +73,5 @@ public class Rook extends Piece
             }
             else break;
         }
-
-        filterPossibleMoves();
     }
 }

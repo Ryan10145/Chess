@@ -12,7 +12,7 @@ public class Pawn extends Piece
         else this.image = Images.WHITE.PAWN;
     }
 
-    public void calculateMoves(Piece[][] board)
+    public void calculateMovesUnfiltered(Piece[][] board)
     {
         //TODO Promotion
         //TODO En Passant
@@ -101,7 +101,5 @@ public class Pawn extends Piece
                 }
             }
         }
-
-        filterPossibleMoves();
     }
 }

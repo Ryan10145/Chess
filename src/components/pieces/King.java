@@ -12,7 +12,7 @@ public class King extends Piece
         else this.image = Images.WHITE.KING;
     }
 
-    public void calculateMoves(Piece[][] board)
+    public void calculateMovesUnfiltered(Piece[][] board)
     {
         //TODO Castling
         possibleMoves.clear();
@@ -53,13 +53,11 @@ public class King extends Piece
         {
             if(canTake(board[col][row + 1])) possibleMoves.add(new int[]{col, row + 1});
         }
-
-        filterPossibleMoves(board);
     }
 
-    private void filterPossibleMoves(Piece[][] board)
+    void filterPossibleMoves(Piece[][] board)
     {
-        super.filterPossibleMoves();
+        super.filterPossibleMoves(board);
         for(Piece[] pieceA : board)
         {
             for(Piece piece : pieceA)

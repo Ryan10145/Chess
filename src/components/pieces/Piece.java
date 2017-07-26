@@ -1,8 +1,12 @@
 package components.pieces;
 
+import components.Board;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.ListIterator;
 
 public abstract class Piece
 {
@@ -24,16 +28,51 @@ public abstract class Piece
         hasMoved = false;
     }
 
-    public abstract void calculateMoves(Piece[][] board);
+    public abstract void calculateMovesUnfiltered(Piece[][] board);
 
-    //Goes through the possible moves and removes the current space if it exists
-    void filterPossibleMoves()
+    public void calculateMoves(Piece[][] board)
     {
+        calculateMovesUnfiltered(board);
         possibleMoves.removeIf(move -> move[0] == col && move[1] == row);
+        filterPossibleMoves(board);
+    }
+
+    //Goes through the possible moves and removes any moves that bring the current player under check
+    void filterPossibleMoves(Piece[][] board)
+    {
+        int currentCol = col;
+        int currentRow = row;
+
+        Iterator<int[]> iterator = possibleMoves.iterator();
+        while(iterator.hasNext())
+        {
+            int[] location = iterator.next();
+
+            Piece priorPiece = board[location[0]][location[1]];
+            Piece currentPiece = board[currentCol][currentRow];
+
+            board[location[0]][location[1]] = this;
+            board[currentCol][currentRow] = null;
+
+            col = location[0];
+            row = location[1];
+
+            if(Board.isCheck(board, second))
+            {
+                iterator.remove();
+            }
+
+            board[currentCol][currentRow] = currentPiece;
+            board[location[0]][location[1]] = priorPiece;
+
+            col = currentCol;
+            row = currentRow;
+        }
     }
 
     public ArrayList<int[]> getMoves()
     {
+        possibleMoves.removeIf(move -> move[0] == col && move[1] == row);
         return possibleMoves;
     }
 

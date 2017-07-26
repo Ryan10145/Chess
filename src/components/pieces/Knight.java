@@ -12,7 +12,7 @@ public class Knight extends Piece
         else this.image = Images.WHITE.KNIGHT;
     }
 
-    public void calculateMoves(Piece[][] board)
+    public void calculateMovesUnfiltered(Piece[][] board)
     {
         possibleMoves.clear();
 
@@ -64,7 +64,5 @@ public class Knight extends Piece
                 if(canTake(board[col + 1][row + 2])) possibleMoves.add(new int[] {col + 1, row + 2});
             }
         }
-
-        filterPossibleMoves();
     }
 }

@@ -12,7 +12,7 @@ public class Queen extends Piece
         else this.image = Images.WHITE.QUEEN;
     }
 
-    public void calculateMoves(Piece[][] board)
+    public void calculateMovesUnfiltered(Piece[][] board)
     {
         possibleMoves.clear();
 
@@ -155,7 +155,5 @@ public class Queen extends Piece
             }
             else break;
         }
-
-        filterPossibleMoves();
     }
 }

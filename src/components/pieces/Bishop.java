@@ -12,11 +12,11 @@ public class Bishop extends Piece
         else this.image = Images.WHITE.BISHOP;
     }
 
-    public void calculateMoves(Piece[][] board)
+    public void calculateMovesUnfiltered(Piece[][] board)
     {
         possibleMoves.clear();
 
-        //Flags for whether to keep checking along the diagonal
+        //Flags for whether to keep checking along the diagonalboard
         boolean checkUpwardsDiagonal = true;
         boolean checkDownwardsDiagonal = true;
 
@@ -97,7 +97,5 @@ public class Bishop extends Piece
 
             if(!(checkUpwardsDiagonal || checkDownwardsDiagonal)) break;
         }
-
-        filterPossibleMoves();
     }
 }

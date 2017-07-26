@@ -5,6 +5,7 @@ import components.pieces.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
+import java.util.Iterator;
 
 public class Board
 {
@@ -70,7 +71,7 @@ public class Board
 
     public void update()
     {
-
+        System.out.println(isCheck(pieces, secondTurn));
     }
 
     public void draw(Graphics2D g2d)
@@ -119,12 +120,19 @@ public class Board
                     TILE_LENGTH, TILE_LENGTH);
 
             //Color all possible locations
-            currentPiece.calculateMoves(pieces);
-            for(int[] location : currentPiece.getMoves())
+            if(currentPiece != null)
             {
-                if(location[0] == hoverCol && location[1] == hoverRow) g2d.setColor(new Color(152, 251, 152, 150));
-                else g2d.setColor(new Color(255, 102, 102, 150));
-                g2d.fillRect(location[0] * TILE_LENGTH, location[1] * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
+                currentPiece.calculateMoves(pieces);
+
+                Iterator<int[]> iterator = currentPiece.getMoves().iterator();
+                while(iterator.hasNext())
+                {
+                    int[] location = iterator.next();
+
+                    if(location[0] == hoverCol && location[1] == hoverRow) g2d.setColor(new Color(152, 251, 152, 150));
+                    else g2d.setColor(new Color(255, 102, 102, 150));
+                    g2d.fillRect(location[0] * TILE_LENGTH, location[1] * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
+                }
             }
         }
 
@@ -159,7 +167,7 @@ public class Board
                 }
             }
             //Selection Mode
-            else
+            else if(currentPiece != null)
             {
                 //Check if the clicked location is a valid location
                 currentPiece.calculateMoves(pieces);
@@ -207,7 +215,6 @@ public class Board
                 {
                     pieces[mouseCol][mouseRow] = currentPiece;
                     currentPiece.setPosition(mouseCol, mouseRow);
-
                     currentPiece.setMoved();
                     secondTurn = !secondTurn;
                 }
@@ -276,5 +283,53 @@ public class Board
     {
         currentPieceX = x - TILE_LENGTH / 2;
         currentPieceY = y - TILE_LENGTH / 2;
+    }
+
+    //Check if a piece is directly attacking the king
+    public static boolean isCheck(Piece[][] pieces, boolean secondTurn)
+    {
+        Piece currentTurnKing = getKing(pieces, secondTurn);
+
+        if(currentTurnKing != null)
+        {
+            for(Piece[] pieceA : pieces)
+            {
+                for(Piece piece : pieceA)
+                {
+                    if(piece != null)
+                    {
+                        if(piece.isSecond() != secondTurn)
+                        {
+                            piece.calculateMovesUnfiltered(pieces);
+                            for(int[] possibleMove : piece.getMoves())
+                            {
+                                if(possibleMove[0] == currentTurnKing.getCol() && possibleMove[1] == currentTurnKing.getRow())
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static Piece getKing(Piece[][] pieces, boolean second)
+    {
+        for(Piece[] pieceA : pieces)
+        {
+            for(Piece piece : pieceA)
+            {
+                if(piece instanceof King && piece.isSecond() == second)
+                {
+                    return piece;
+                }
+            }
+        }
+
+        return null;
     }
 }
