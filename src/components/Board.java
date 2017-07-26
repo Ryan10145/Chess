@@ -1,11 +1,11 @@
 package components;
 
 import components.pieces.*;
+import utility.Images;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
-import java.util.Iterator;
 
 public class Board
 {
@@ -19,6 +19,11 @@ public class Board
     private int currentPieceX, currentPieceY;
     private boolean selectFlag;
     private boolean secondTurn;
+
+    private boolean promoting;
+    private int promotingCol;
+    private int promotingRow;
+    private int promotingHover;
 
     public Board(int x, int y)
     {
@@ -71,31 +76,34 @@ public class Board
 
     public void update()
     {
-        if(isCheck(pieces, secondTurn))
+        if(!selectFlag && currentPiece == null)
         {
-            boolean checkmate = true;
-            for(Piece[] pieceA : pieces)
+            if(isCheck(pieces, secondTurn))
             {
-                for(Piece piece : pieceA)
+                boolean checkmate = true;
+                for(Piece[] pieceA : pieces)
                 {
-                    if(piece != null)
+                    for(Piece piece : pieceA)
                     {
-                        if(piece.isSecond() == secondTurn)
+                        if(piece != null)
                         {
-                            piece.calculateMoves(pieces);
-                            if(!piece.getMoves().isEmpty())
+                            if(piece.isSecond() == secondTurn)
                             {
-                                checkmate = false;
-                                break;
+                                piece.calculateMoves(pieces);
+                                if(!piece.getMoves().isEmpty())
+                                {
+                                    checkmate = false;
+                                    break;
+                                }
                             }
                         }
                     }
+
+                    if(checkmate) break;
                 }
 
-                if(checkmate) break;
+                if(checkmate) System.out.println(secondTurn ? "White Wins!" : "Black Wins!");
             }
-
-            if(checkmate) System.out.println(secondTurn ? "White Wins!" : "Black Wins!");
         }
     }
 
@@ -110,6 +118,7 @@ public class Board
         {
             for(int row = 0; row < pieces[0].length; row++)
             {
+                //Draw the board
                 if((col + row) % 2 == 0) g2d.setColor(new Color(255, 255, 224));
                 else g2d.setColor(new Color(130, 82, 1));
 
@@ -119,7 +128,7 @@ public class Board
                 if(hoverCol != -1 && hoverRow != -1)
                 {
                     Piece hoverPiece = pieces[hoverCol][hoverRow];
-                    if(!drewHover && !selectFlag && hoverPiece != null)
+                    if(!drewHover && !selectFlag && !promoting && hoverPiece != null)
                     {
                         if(hoverPiece.isSecond() == this.secondTurn &&
                                 hoverPiece.getCol() == col && hoverPiece.getRow() == row)
@@ -144,24 +153,56 @@ public class Board
             g2d.fillRect(currentPiece.getCol() * TILE_LENGTH, currentPiece.getRow() * TILE_LENGTH,
                     TILE_LENGTH, TILE_LENGTH);
 
-            //Color all possible locations
+            //Color all possible movement options
             if(currentPiece != null)
             {
                 currentPiece.calculateMoves(pieces);
 
-                Iterator<int[]> iterator = currentPiece.getMoves().iterator();
-                while(iterator.hasNext())
+                for(int[] location : currentPiece.getMoves())
                 {
-                    int[] location = iterator.next();
-
-                    if(location[0] == hoverCol && location[1] == hoverRow) g2d.setColor(new Color(152, 251, 152, 150));
+                    if(location[0] == hoverCol && location[1] == hoverRow)
+                        g2d.setColor(new Color(152, 251, 152, 150));
                     else g2d.setColor(new Color(255, 102, 102, 150));
                     g2d.fillRect(location[0] * TILE_LENGTH, location[1] * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
                 }
             }
         }
 
+        //Draw the current dragged/selected piece
         if(currentPiece != null) currentPiece.draw(g2d, TILE_LENGTH, currentPieceX - x, currentPieceY - y);
+
+        //Draw the promotion menu
+        if(promoting)
+        {
+            AffineTransform transform2 = g2d.getTransform();
+            g2d.translate((promotingCol - 1.75) * TILE_LENGTH, (promotingRow + 0.75) * TILE_LENGTH);
+
+            g2d.setColor(new Color(192, 192, 192, 210));
+            g2d.fillRect(0, 0, TILE_LENGTH * 4 + 25, TILE_LENGTH + 10);
+
+            if(promotingHover != -1)
+            {
+                g2d.setColor(new Color(152, 251, 152, 150));
+                g2d.fillRect((5 * (promotingHover + 1)) + promotingHover * TILE_LENGTH, 5, TILE_LENGTH, TILE_LENGTH);
+            }
+
+            if(secondTurn)
+            {
+                g2d.drawImage(Images.BLACK.BISHOP, 5, 5, TILE_LENGTH, TILE_LENGTH, null);
+                g2d.drawImage(Images.BLACK.KNIGHT, 10 + TILE_LENGTH, 5, TILE_LENGTH, TILE_LENGTH, null);
+                g2d.drawImage(Images.BLACK.ROOK, 15 + TILE_LENGTH * 2, 5, TILE_LENGTH, TILE_LENGTH, null);
+                g2d.drawImage(Images.BLACK.QUEEN, 20 + TILE_LENGTH * 3, 5, TILE_LENGTH, TILE_LENGTH, null);
+            }
+            else
+            {
+                g2d.drawImage(Images.WHITE.BISHOP, 5, 5, TILE_LENGTH, TILE_LENGTH, null);
+                g2d.drawImage(Images.WHITE.KNIGHT, 10 + TILE_LENGTH, 5, TILE_LENGTH, TILE_LENGTH, null);
+                g2d.drawImage(Images.WHITE.ROOK, 15 + TILE_LENGTH * 2, 5, TILE_LENGTH, TILE_LENGTH, null);
+                g2d.drawImage(Images.WHITE.QUEEN, 20 + TILE_LENGTH * 3, 5, TILE_LENGTH, TILE_LENGTH, null);
+            }
+
+            g2d.setTransform(transform2);
+        }
 
         g2d.setTransform(transform);
     }
@@ -171,45 +212,82 @@ public class Board
         int mouseCol = (e.getX() - x) / TILE_LENGTH;
         int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
-        //Check if the mouse is within the board
-        if(mouseCol >= 0 && mouseCol < pieces.length &&
-                mouseRow >= 0 && mouseRow < pieces[0].length)
+        if(!promoting)
         {
-            if(!selectFlag)
+            //Check if the mouse is within the board
+            if(mouseCol >= 0 && mouseCol < pieces.length &&
+                    mouseRow >= 0 && mouseRow < pieces[0].length)
             {
-                //Check if the square has a piece
-                if(currentPiece == null && pieces[mouseCol][mouseRow] != null)
+                if(!selectFlag)
                 {
-                    if(pieces[mouseCol][mouseRow].isSecond() == secondTurn)
+                    //Check if the square has a piece
+                    if(currentPiece == null && pieces[mouseCol][mouseRow] != null)
                     {
-                        //Pick up the piece and remove it
-                        currentPiece = pieces[mouseCol][mouseRow];
-                        pieces[mouseCol][mouseRow] = null;
+                        if(pieces[mouseCol][mouseRow].isSecond() == secondTurn)
+                        {
+                            //Pick up the piece and remove it
+                            currentPiece = pieces[mouseCol][mouseRow];
+                            pieces[mouseCol][mouseRow] = null;
 
-                        setCurrentPieceLocation(x + currentPiece.getCol() * TILE_LENGTH + TILE_LENGTH / 2,
-                                y + currentPiece.getRow() * TILE_LENGTH + TILE_LENGTH / 2);
+                            setCurrentPieceLocation(x + currentPiece.getCol() * TILE_LENGTH + TILE_LENGTH / 2,
+                                    y + currentPiece.getRow() * TILE_LENGTH + TILE_LENGTH / 2);
+                        }
                     }
                 }
-            }
-            //Selection Mode
-            else if(currentPiece != null)
-            {
-                //Check if the clicked location is a valid location
-                currentPiece.calculateMoves(pieces);
-                if(currentPiece.isValidMove(mouseCol, mouseRow))
+                //Selection Mode
+                else if(currentPiece != null)
                 {
-                    pieces[mouseCol][mouseRow] = currentPiece;
-                    currentPiece.setPosition(mouseCol, mouseRow);
-                    currentPiece.setMoved();
+                    //Check if the clicked location is a valid location
+                    currentPiece.calculateMoves(pieces);
+                    if(currentPiece.isValidMove(mouseCol, mouseRow))
+                    {
+                        pieces[mouseCol][mouseRow] = currentPiece;
+                        currentPiece.setPosition(mouseCol, mouseRow);
+                        currentPiece.setMoved();
 
-                    secondTurn = !secondTurn;
+                        //Check for Pawn promotion
+                        if(currentPiece instanceof Pawn && (currentPiece.isSecond() && currentPiece.getRow() == 7) ||
+                                (!currentPiece.isSecond() && currentPiece.getRow() == 0))
+                        {
+                            promoting = true;
+                            promotingCol = currentPiece.getCol();
+                            promotingRow = currentPiece.getRow();
+                        }
+                        else
+                        {
+                            secondTurn = !secondTurn;
+                        }
+                    }
+                    //Otherwise, deactivate the select mode and revert the position of the current piece
+                    else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
+
+                    currentPiece = null;
+                    selectFlag = false;
                 }
-                //Otherwise, deactivate the select mode and revert the position of the current piece
-                else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
-
-                currentPiece = null;
-                selectFlag = false;
             }
+        }
+        else
+        {
+            switch(promotingHover)
+            {
+                case 0:
+                    pieces[promotingCol][promotingRow] = new Bishop(secondTurn, promotingCol, promotingRow);
+                    break;
+                case 1:
+                    pieces[promotingCol][promotingRow] = new Bishop(secondTurn, promotingCol, promotingRow);
+                    break;
+                case 2:
+                    pieces[promotingCol][promotingRow] = new Bishop(secondTurn, promotingCol, promotingRow);
+                     break;
+                case 3:
+                    pieces[promotingCol][promotingRow] = new Bishop(secondTurn, promotingCol, promotingRow);
+                    break;
+                default:
+                    return;
+            }
+
+            promoting = false;
+            secondTurn = !secondTurn;
         }
     }
 
@@ -218,52 +296,61 @@ public class Board
         int mouseCol = (e.getX() - x) / TILE_LENGTH;
         int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
-        //Check if the mouse is within the board
-        if(mouseCol >= 0 && mouseCol < pieces.length &&
-                mouseRow >= 0 && mouseRow < pieces[0].length)
+        if(!promoting)
         {
-            if(currentPiece != null)
+            //Check if the mouse is within the board
+            if(mouseCol >= 0 && mouseCol < pieces.length &&
+                    mouseRow >= 0 && mouseRow < pieces[0].length)
             {
-                //If the piece is not moved, then go into the select mode
-                if(mouseCol == currentPiece.getCol() && mouseRow == currentPiece.getRow())
+                if(currentPiece != null)
                 {
-                    selectFlag = true;
-                    setCurrentPieceLocation(x + currentPiece.getCol() * TILE_LENGTH + TILE_LENGTH / 2,
-                            y + currentPiece.getRow() * TILE_LENGTH + TILE_LENGTH / 2);
-                    return;
-                }
+                    //If the piece is not moved, then go into the select mode
+                    if(mouseCol == currentPiece.getCol() && mouseRow == currentPiece.getRow())
+                    {
+                        selectFlag = true;
+                        setCurrentPieceLocation(x + currentPiece.getCol() * TILE_LENGTH + TILE_LENGTH / 2,
+                                y + currentPiece.getRow() * TILE_LENGTH + TILE_LENGTH / 2);
+                        return;
+                    }
 
-                currentPiece.calculateMoves(pieces);
+                    currentPiece.calculateMoves(pieces);
 
-                //Check if the drop location is clear and a valid position
-                if(currentPiece.isValidMove(mouseCol, mouseRow))
-                {
-                    pieces[mouseCol][mouseRow] = currentPiece;
-                    currentPiece.setPosition(mouseCol, mouseRow);
-                    currentPiece.setMoved();
-                    secondTurn = !secondTurn;
+                    //Check if the drop location is clear and a valid position
+                    if(currentPiece.isValidMove(mouseCol, mouseRow))
+                    {
+                        pieces[mouseCol][mouseRow] = currentPiece;
+                        currentPiece.setPosition(mouseCol, mouseRow);
+                        currentPiece.setMoved();
+
+                        //Check for Pawn promotion
+                        if(currentPiece instanceof Pawn && (currentPiece.isSecond() && currentPiece.getRow() == 7) ||
+                                (!currentPiece.isSecond() && currentPiece.getRow() == 0))
+                        {
+                            promoting = true;
+                        }
+                        else
+                        {
+                            secondTurn = !secondTurn;
+                        }
+                    }
+                    //Otherwise, move the piece back to its original position
+                    else
+                    {
+                        pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
+                    }
                 }
-                //Otherwise, move the piece back to its original position
-                else
-                {
-                    pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
-                }
+            } else
+            {
+                pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
             }
-        }
-        else
-        {
-            pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
-        }
 
-        currentPiece = null;
+            currentPiece = null;
+        }
     }
 
     public void mouseDragged(MouseEvent e)
     {
-//        int mouseCol = (e.getX() - x) / TILE_LENGTH;
-//        int mouseRow = (e.getY() - y) / TILE_LENGTH;
-
-        if(currentPiece != null && !selectFlag)
+        if(currentPiece != null && !selectFlag && !promoting)
         {
             //Update currentPiece position if the mouse is far enough between the original position
             if(distSq(e.getX(), e.getY(),
@@ -288,17 +375,37 @@ public class Board
 
     public void mouseMoved(MouseEvent e)
     {
-        int mouseCol = (e.getX() - x) / TILE_LENGTH;
-        int mouseRow = (e.getY() - y) / TILE_LENGTH;
-
-        if(mouseCol >= 0 && mouseCol < pieces.length &&
-                mouseRow >= 0 && mouseRow < pieces[0].length)
+        if(!promoting)
         {
-            hoverCol = mouseCol;
-            hoverRow = mouseRow;
+            int mouseCol = (e.getX() - x) / TILE_LENGTH;
+            int mouseRow = (e.getY() - y) / TILE_LENGTH;
+
+            if(mouseCol >= 0 && mouseCol < pieces.length &&
+                    mouseRow >= 0 && mouseRow < pieces[0].length)
+            {
+                hoverCol = mouseCol;
+                hoverRow = mouseRow;
+            }
+            else
+            {
+                hoverCol = -1;
+                hoverRow = -1;
+            }
         }
         else
         {
+            int relativeY = e.getY() - y - (int) ((promotingRow + 0.75) * TILE_LENGTH);
+            int relativeX = e.getX() - x - (int) ((promotingCol - 1.75) * TILE_LENGTH);
+
+            if(relativeX >= 5 && relativeX <= TILE_LENGTH * 4 + 20 && relativeY >= 5 && relativeY <= TILE_LENGTH + 5)
+            {
+                promotingHover = (relativeX - 5) / (TILE_LENGTH + 5);
+            }
+            else
+            {
+                promotingHover = -1;
+            }
+
             hoverCol = -1;
             hoverRow = -1;
         }

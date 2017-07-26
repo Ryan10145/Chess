@@ -5,8 +5,7 @@ import components.Board;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.ListIterator;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class Piece
 {
@@ -15,7 +14,7 @@ public abstract class Piece
 
     BufferedImage image;
 
-    ArrayList<int[]> possibleMoves;
+    CopyOnWriteArrayList<int[]> possibleMoves;
     boolean hasMoved;
 
     Piece(boolean second, int col, int row)
@@ -24,7 +23,7 @@ public abstract class Piece
         this.col = col;
         this.row = row;
 
-        possibleMoves = new ArrayList<>();
+        possibleMoves = new CopyOnWriteArrayList<>();
         hasMoved = false;
     }
 
@@ -43,11 +42,10 @@ public abstract class Piece
         int currentCol = col;
         int currentRow = row;
 
-        Iterator<int[]> iterator = possibleMoves.iterator();
-        while(iterator.hasNext())
-        {
-            int[] location = iterator.next();
+        ArrayList<int[]> remove = new ArrayList<>();
 
+        for(int[] location : possibleMoves)
+        {
             Piece priorPiece = board[location[0]][location[1]];
             Piece currentPiece = board[currentCol][currentRow];
 
@@ -59,7 +57,7 @@ public abstract class Piece
 
             if(Board.isCheck(board, second))
             {
-                iterator.remove();
+                remove.add(location);
             }
 
             board[currentCol][currentRow] = currentPiece;
@@ -68,9 +66,11 @@ public abstract class Piece
             col = currentCol;
             row = currentRow;
         }
+
+        possibleMoves.removeAll(remove);
     }
 
-    public ArrayList<int[]> getMoves()
+    public CopyOnWriteArrayList<int[]> getMoves()
     {
         possibleMoves.removeIf(move -> move[0] == col && move[1] == row);
         return possibleMoves;

@@ -14,7 +14,6 @@ public class Pawn extends Piece
 
     public void calculateMovesUnfiltered(Piece[][] board)
     {
-        //TODO Promotion
         //TODO En Passant
 
         possibleMoves.clear();
