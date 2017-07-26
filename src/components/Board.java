@@ -99,7 +99,7 @@ public class Board
                         }
                     }
 
-                    if(checkmate) break;
+                    if(!checkmate) break;
                 }
 
                 if(checkmate) System.out.println(secondTurn ? "White Wins!" : "Black Wins!");
@@ -158,12 +158,15 @@ public class Board
             {
                 currentPiece.calculateMoves(pieces);
 
-                for(int[] location : currentPiece.getMoves())
+                if(currentPiece != null)
                 {
-                    if(location[0] == hoverCol && location[1] == hoverRow)
-                        g2d.setColor(new Color(152, 251, 152, 150));
-                    else g2d.setColor(new Color(255, 102, 102, 150));
-                    g2d.fillRect(location[0] * TILE_LENGTH, location[1] * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
+                    for(int[] location : currentPiece.getMoves())
+                    {
+                        if(location[0] == hoverCol && location[1] == hoverRow)
+                            g2d.setColor(new Color(152, 251, 152, 150));
+                        else g2d.setColor(new Color(255, 102, 102, 150));
+                        g2d.fillRect(location[0] * TILE_LENGTH, location[1] * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
+                    }
                 }
             }
         }
