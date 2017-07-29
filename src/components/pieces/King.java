@@ -110,10 +110,11 @@ public class King extends Piece
                                     (piece instanceof Bishop &&
                                             ((piece.getCol() - piece.getRow() == col - row) ||
                                             (piece.getCol() + piece.getRow() == col + row))) ||
-                                    piece instanceof Queen &&
-                                            (piece.getCol() == this.col || piece.getRow() == this.row ||
+                                    (piece instanceof Queen &&
+                                            ((piece.getCol() == this.col || piece.getRow() == this.row) ||
                                             (piece.getCol() - piece.getRow() == col - row) ||
-                                            (piece.getCol() + piece.getRow() == col + row)))
+                                            (piece.getCol() + piece.getRow() == col + row))) ||
+                                    piece instanceof Knight)
                             {
                                 piece.calculateMoves(board);
                                 for(int[] location : piece.possibleMoves)
