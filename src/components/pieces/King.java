@@ -88,9 +88,6 @@ public class King extends Piece
         {
             for(Piece piece : pieceA)
             {
-                //TODO Optimize this by checking only if the piece is within striking range
-                // w/ casework that checks the type of the piece
-
                 if(piece != null)
                 {
                     if(piece.second != this.second)
@@ -108,11 +105,22 @@ public class King extends Piece
                         }
                         else
                         {
-                            piece.calculateMoves(board);
-                            for(int[] location : piece.possibleMoves)
+                            if((piece instanceof Rook &&
+                                            (piece.getCol() == this.col || piece.getRow() == this.row)) ||
+                                    (piece instanceof Bishop &&
+                                            ((piece.getCol() - piece.getRow() == col - row) ||
+                                            (piece.getCol() + piece.getRow() == col + row))) ||
+                                    piece instanceof Queen &&
+                                            (piece.getCol() == this.col || piece.getRow() == this.row ||
+                                            (piece.getCol() - piece.getRow() == col - row) ||
+                                            (piece.getCol() + piece.getRow() == col + row)))
                             {
-                                possibleMoves.removeIf(possibleMove -> possibleMove[0] == location[0] &&
-                                        possibleMove[1] == location[1]);
+                                piece.calculateMoves(board);
+                                for(int[] location : piece.possibleMoves)
+                                {
+                                    possibleMoves.removeIf(possibleMove -> possibleMove[0] == location[0] &&
+                                            possibleMove[1] == location[1]);
+                                }
                             }
                         }
                     }
