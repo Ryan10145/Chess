@@ -4,6 +4,8 @@ import utility.Images;
 
 public class Pawn extends Piece
 {
+    private boolean canEnPassant;
+
     public Pawn(boolean black, int col, int row)
     {
         super(black, col, row);
@@ -14,91 +16,74 @@ public class Pawn extends Piece
 
     public void calculateMovesUnfiltered(Piece[][] board)
     {
-        //TODO En Passant
-
         possibleMoves.clear();
 
-        //If the piece is second, then move it downwards instead of upwards
-        if(second)
+        int targetRow = second ? row + 1 : row - 1;
+        int targetDoubleRow = second ? row + 2 : row - 2;
+
+        //Check to make sure that the piece is not in last row
+        if(row + 1 < board[0].length  && row > 0)
         {
-            //Check to make sure that the piece is not in last row
-            if(row < board[0].length - 1)
+            //If the space ahead is clear, then add it
+            if(board[col][targetRow] == null)
             {
-                //If the space ahead is clear, then add it
-                if(board[col][row + 1] == null)
-                {
-                    possibleMoves.add(new int[]{col, row + 1});
+                possibleMoves.add(new int[]{col, targetRow});
 
-                    //If the pawn has not been moved, and the space two spots ahead is clear, add it
-                    if(!hasMoved)
-                    {
-                        if(row < board.length - 2)
-                        {
-                            if(board[col][row + 2] == null) possibleMoves.add(new int[]{col, row + 2});
-                        }
-                    }
+                //If the pawn has not been moved, and the space two spots ahead is clear, add it
+                if(!hasMoved)
+                {
+                    if(board[col][targetDoubleRow] == null) possibleMoves.add(new int[]{col, targetDoubleRow});
+                }
+            }
+
+            //If the piece is not on the left side
+            if(col - 1 >= 0)
+            {
+                //Check if there is an opposing piece on a diagonal, and add it
+                if(board[col - 1][targetRow] != null)
+                {
+                    if(board[col - 1][targetRow].second != this.second) possibleMoves.add(new int[]{col - 1, targetRow});
                 }
 
-                //If the piece is not on the left side
-                if(col > 0)
+                //Check for En Passants
+                if(board[col - 1][row] instanceof Pawn)
                 {
-                    //Check if there is an opposing piece on a diagonal, and add it
-                    if(board[col - 1][row + 1] != null)
+                    if(board[col - 1][row].second != this.second)
                     {
-                        if(board[col - 1][row + 1].second != this.second) possibleMoves.add(new int[]{col - 1, row + 1});
+                        Pawn pawn = (Pawn) board[col - 1][row];
+                        if(pawn.canEnPassant) possibleMoves.add(new int[]{col - 1, targetRow});
                     }
                 }
-                //If the piece is not on the right side
-                if(col < board.length - 1)
+            }
+            //If the piece is not on the right side
+            if(col + 1 < board.length)
+            {
+                //Check if there is an opposing piece on a diagonal, and add it
+                if(board[col + 1][targetRow] != null)
                 {
-                    //Check if there is an opposing piece on a diagonal, and add it
-                    if(board[col + 1][row + 1] != null)
+                    if(board[col + 1][targetRow].second != this.second) possibleMoves.add(new int[]{col + 1, targetRow});
+                }
+
+                //Check for En Passants
+                if(board[col + 1][row] instanceof Pawn)
+                {
+                    if(board[col + 1][row].second != this.second)
                     {
-                        if(board[col + 1][row + 1].second != this.second) possibleMoves.add(new int[]{col + 1, row + 1});
+                        Pawn pawn = (Pawn) board[col + 1][row];
+                        if(pawn.canEnPassant) possibleMoves.add(new int[]{col + 1, targetRow});
                     }
                 }
             }
         }
-        //If the piece is white
-        else
-        {
-            //Check to make sure that the piece is not in last row
-            if(row > 0)
-            {
-                //If the space ahead is clear, then add it
-                if(board[col][row - 1] == null)
-                {
-                    possibleMoves.add(new int[]{col, row - 1});
+    }
 
-                    //If the pawn has not been moved, and the space two spots ahead is clear, add it
-                    if(!hasMoved)
-                    {
-                        if(row >= 2)
-                        {
-                            if(board[col][row - 2] == null) possibleMoves.add(new int[]{col, row - 2});
-                        }
-                    }
-                }
+    public void setCanEnPassant(boolean canEnPassant)
+    {
+        this.canEnPassant = canEnPassant;
+    }
 
-                //If the piece is not on the left side
-                if(col > 0)
-                {
-                    //Check if there is an opposing piece on a diagonal, and add it
-                    if(board[col - 1][row - 1] != null)
-                    {
-                        if(board[col - 1][row - 1].second != this.second) possibleMoves.add(new int[]{col - 1, row - 1});
-                    }
-                }
-                //If the piece is not on the right side
-                if(col < board.length - 1)
-                {
-                    //Check if there is an opposing piece on a diagonal, and add it
-                    if(board[col + 1][row - 1] != null)
-                    {
-                        if(board[col + 1][row - 1].second != this.second) possibleMoves.add(new int[]{col + 1, row - 1});
-                    }
-                }
-            }
-        }
+    public boolean canEnPassant()
+    {
+        return canEnPassant;
     }
 }

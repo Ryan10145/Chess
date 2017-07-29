@@ -240,43 +240,7 @@ public class Board
                 //Selection Mode
                 else if(currentPiece != null)
                 {
-                    //Check if the clicked location is a valid location
-                    currentPiece.calculateMoves(pieces);
-                    if(currentPiece.isValidMove(mouseCol, mouseRow))
-                    {
-                        if(currentPiece instanceof King && Math.abs(mouseCol - currentPiece.getCol()) == 2)
-                        {
-                            Piece rook;
-                            if(mouseCol > currentPiece.getCol()) rook = pieces[7][currentPiece.getRow()];
-                            else rook = pieces[0][currentPiece.getRow()];
-
-                            pieces[mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol())][currentPiece.getRow()] = rook;
-                            pieces[rook.getCol()][rook.getRow()] = null;
-
-                            rook.setPosition(mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol()),
-                                    currentPiece.getRow());
-                            rook.setMoved();
-                        }
-
-                        pieces[mouseCol][mouseRow] = currentPiece;
-                        currentPiece.setPosition(mouseCol, mouseRow);
-                        currentPiece.setMoved();
-
-                        //Check for Pawn promotion
-                        if(currentPiece instanceof Pawn && (currentPiece.isSecond() && currentPiece.getRow() == 7) ||
-                                (!currentPiece.isSecond() && currentPiece.getRow() == 0))
-                        {
-                            promoting = true;
-                            promotingCol = currentPiece.getCol();
-                            promotingRow = currentPiece.getRow();
-                        }
-                        else
-                        {
-                            secondTurn = !secondTurn;
-                        }
-                    }
-                    //Otherwise, deactivate the select mode and revert the position of the current piece
-                    else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
+                    movePiece(mouseCol, mouseRow);
 
                     currentPiece = null;
                     selectFlag = false;
@@ -330,53 +294,100 @@ public class Board
                         return;
                     }
 
-                    currentPiece.calculateMoves(pieces);
-
-                    //Check if the drop location is clear and a valid position
-                    if(currentPiece.isValidMove(mouseCol, mouseRow))
-                    {
-                        if(currentPiece instanceof King && Math.abs(mouseCol - currentPiece.getCol()) == 2)
-                        {
-                            Piece rook;
-                            if(mouseCol > currentPiece.getCol()) rook = pieces[7][currentPiece.getRow()];
-                            else rook = pieces[0][currentPiece.getRow()];
-
-                            pieces[mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol())][currentPiece.getRow()] = rook;
-                            pieces[rook.getCol()][rook.getRow()] = null;
-
-                            rook.setPosition(mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol()),
-                                    currentPiece.getRow());
-                            rook.setMoved();
-                        }
-
-                        pieces[mouseCol][mouseRow] = currentPiece;
-                        currentPiece.setPosition(mouseCol, mouseRow);
-                        currentPiece.setMoved();
-
-                        //Check for Pawn promotion
-                        if(currentPiece instanceof Pawn && (currentPiece.isSecond() && currentPiece.getRow() == 7) ||
-                                (!currentPiece.isSecond() && currentPiece.getRow() == 0))
-                        {
-                            promoting = true;
-                        }
-                        else
-                        {
-                            secondTurn = !secondTurn;
-                        }
-                    }
-                    //Otherwise, move the piece back to its original position
-                    else
-                    {
-                        pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
-                    }
+                    movePiece(mouseCol, mouseRow);
                 }
-            } else
-            {
-                pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
             }
+            else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
 
             currentPiece = null;
         }
+    }
+
+    private void movePiece(int mouseCol, int mouseRow)
+    {
+        //Check if the clicked location is a valid location
+        currentPiece.calculateMoves(pieces);
+
+        if(currentPiece.isValidMove(mouseCol, mouseRow))
+        {
+            for(Piece[] pieceA : pieces)
+            {
+                for(Piece piece : pieceA)
+                {
+                    if(piece instanceof Pawn)
+                    {
+                        if(piece.isSecond() == secondTurn)
+                        {
+                            Pawn pawn = (Pawn) piece;
+                            pawn.setCanEnPassant(false);
+                        }
+                    }
+                }
+            }
+
+            if(currentPiece instanceof King && Math.abs(mouseCol - currentPiece.getCol()) == 2)
+            {
+                Piece rook;
+                if(mouseCol > currentPiece.getCol()) rook = pieces[7][currentPiece.getRow()];
+                else rook = pieces[0][currentPiece.getRow()];
+
+                pieces[mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol())][currentPiece.getRow()] = rook;
+                pieces[rook.getCol()][rook.getRow()] = null;
+
+                rook.setPosition(mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol()),
+                        currentPiece.getRow());
+                rook.setMoved();
+            }
+            else if(currentPiece instanceof Pawn)
+            {
+                Pawn pawn = (Pawn) currentPiece;
+                if(Math.abs(pawn.getRow() - mouseRow) == 2) pawn.setCanEnPassant(true);
+
+                if(pawn.getCol() - 1 >= 0)
+                {
+                    if(pieces[pawn.getCol() - 1][pawn.getRow()] instanceof Pawn)
+                    {
+                        if(pieces[pawn.getCol() - 1][pawn.getRow()].isSecond() != pawn.isSecond() &&
+                                pieces[mouseCol][mouseRow] == null &&
+                                mouseCol == pawn.getCol() - 1)
+                        {
+                            pieces[pawn.getCol() - 1][pawn.getRow()] = null;
+                        }
+                    }
+                }
+                if(pawn.getCol() + 1 < pieces.length)
+                {
+                    if(pieces[pawn.getCol() + 1][pawn.getRow()] instanceof Pawn)
+                    {
+                        if(pieces[pawn.getCol() + 1][pawn.getRow()].isSecond() != pawn.isSecond() &&
+                                pieces[mouseCol][mouseRow] == null &&
+                                mouseCol == pawn.getCol() + 1)
+                        {
+                            pieces[pawn.getCol() + 1][pawn.getRow()] = null;
+                        }
+                    }
+                }
+            }
+
+            pieces[mouseCol][mouseRow] = currentPiece;
+            currentPiece.setPosition(mouseCol, mouseRow);
+            currentPiece.setMoved();
+
+            //Check for Pawn promotion
+            if(currentPiece instanceof Pawn && (currentPiece.isSecond() && currentPiece.getRow() == 7) ||
+                    (!currentPiece.isSecond() && currentPiece.getRow() == 0))
+            {
+                promoting = true;
+                promotingCol = currentPiece.getCol();
+                promotingRow = currentPiece.getRow();
+            }
+            else
+            {
+                secondTurn = !secondTurn;
+            }
+        }
+        //Otherwise, deactivate the select mode and revert the position of the current piece
+        else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
     }
 
     public void mouseDragged(MouseEvent e)
