@@ -244,6 +244,20 @@ public class Board
                     currentPiece.calculateMoves(pieces);
                     if(currentPiece.isValidMove(mouseCol, mouseRow))
                     {
+                        if(currentPiece instanceof King && Math.abs(mouseCol - currentPiece.getCol()) == 2)
+                        {
+                            Piece rook;
+                            if(mouseCol > currentPiece.getCol()) rook = pieces[7][currentPiece.getRow()];
+                            else rook = pieces[0][currentPiece.getRow()];
+
+                            pieces[mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol())][currentPiece.getRow()] = rook;
+                            pieces[rook.getCol()][rook.getRow()] = null;
+
+                            rook.setPosition(mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol()),
+                                    currentPiece.getRow());
+                            rook.setMoved();
+                        }
+
                         pieces[mouseCol][mouseRow] = currentPiece;
                         currentPiece.setPosition(mouseCol, mouseRow);
                         currentPiece.setMoved();
@@ -321,6 +335,20 @@ public class Board
                     //Check if the drop location is clear and a valid position
                     if(currentPiece.isValidMove(mouseCol, mouseRow))
                     {
+                        if(currentPiece instanceof King && Math.abs(mouseCol - currentPiece.getCol()) == 2)
+                        {
+                            Piece rook;
+                            if(mouseCol > currentPiece.getCol()) rook = pieces[7][currentPiece.getRow()];
+                            else rook = pieces[0][currentPiece.getRow()];
+
+                            pieces[mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol())][currentPiece.getRow()] = rook;
+                            pieces[rook.getCol()][rook.getRow()] = null;
+
+                            rook.setPosition(mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol()),
+                                    currentPiece.getRow());
+                            rook.setMoved();
+                        }
+
                         pieces[mouseCol][mouseRow] = currentPiece;
                         currentPiece.setPosition(mouseCol, mouseRow);
                         currentPiece.setMoved();

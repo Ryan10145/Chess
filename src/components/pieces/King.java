@@ -14,7 +14,6 @@ public class King extends Piece
 
     public void calculateMovesUnfiltered(Piece[][] board)
     {
-        //TODO Castling
         possibleMoves.clear();
 
         //Add all locations on the left side
@@ -46,12 +45,39 @@ public class King extends Piece
         //Add the top location
         if(row > 0)
         {
-            if(canTake(board[col][row - 1])) possibleMoves.add(new int[]{col, row - 1});
+            if(canTake(board[col][row - 1])) possibleMoves.add(new int[] {col, row - 1});
         }
         //Add the bottom location
         if(row < board[0].length - 1)
         {
-            if(canTake(board[col][row + 1])) possibleMoves.add(new int[]{col, row + 1});
+            if(canTake(board[col][row + 1])) possibleMoves.add(new int[] {col, row + 1});
+        }
+
+        //Search current row for castling, if the king has not been moved
+        if(!hasMoved)
+        {
+            for(int col = 0; col < board.length; col++)
+            {
+                if(board[col][this.row] instanceof Rook && !board[col][this.row].hasMoved)
+                {
+                    //Check one, make sure that the path to the rook is clear
+                    //Check two, make sure that the king, anywhere along that line, is not in check
+                    boolean canCastle = true;
+
+                    for(int checkCol = this.col + (int) Math.signum(col - this.col);
+                        checkCol != col;
+                        checkCol += Math.signum(col - this.col))
+                    {
+                        if(board[checkCol][this.row] != null)
+                        {
+                            canCastle = false;
+                            break;
+                        }
+                    }
+
+                    if(canCastle) possibleMoves.add(new int[] {this.col + (int) (2 * Math.signum(col - this.col)), this.row});
+                }
+            }
         }
     }
 
@@ -91,6 +117,25 @@ public class King extends Piece
                         }
                     }
                 }
+            }
+        }
+
+        //Remove a castling option if the King cannot move to the space between it and the castling spot
+        for(int[] location : possibleMoves)
+        {
+            if(Math.abs(location[0] - this.col) == 2)
+            {
+                boolean found = false;
+                for(int[] check : possibleMoves)
+                {
+                    if(check[0] == (location[0] + this.col) / 2 && check[1] == this.row)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if(!found) possibleMoves.remove(location);
             }
         }
     }
