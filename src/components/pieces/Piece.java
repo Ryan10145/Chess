@@ -27,6 +27,8 @@ public abstract class Piece
         hasMoved = false;
     }
 
+    public abstract String getID();
+
     public abstract void calculateMovesUnfiltered(Piece[][] board);
 
     public void calculateMoves(Piece[][] board)

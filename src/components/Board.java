@@ -25,9 +25,21 @@ public class Board
     private int promotingCol;
     private int promotingRow;
     private int promotingHover;
+    private String moves;
+    //Syntax for Moves:
+    //Two Characters for Piece, Two Numbers for col/row of src, Two Numbers for col/row of destination
+    //Then, if it was a take, put the id of the take. Otherwise, put a //
+    //Then, if it was a promotion, put the id of the new piece. Otherwise put a //
+
+    //If it was a castle, then put CA, then both the original king col/row, new king col/row,
+    //original rook col/row, and then new rook col/row
+
+    //If it was a en passant, then put EN, then put the original pawn col/row, the new pawn col/row ,
+    //taken pawn col/row, and then //
 
     //TODO Stalemate
     //TODO Fix bug where taking a piece and then the piece color is drawn incorrectly
+    //TODO Undo Moves
 
     public Board(int x, int y)
     {
@@ -36,6 +48,8 @@ public class Board
 
         pieces = new Piece[8][8];
         setUpPieces();
+
+        moves = "";
     }
 
     private void setUpPieces()
@@ -80,11 +94,12 @@ public class Board
 
     public void update()
     {
+        boolean checkmate = true;
+
         if(!selectFlag && currentPiece == null)
         {
             if(isCheck(pieces, secondTurn))
             {
-                boolean checkmate = true;
                 for(Piece[] pieceA : pieces)
                 {
                     for(Piece piece : pieceA)
@@ -110,7 +125,22 @@ public class Board
             }
         }
 
-        if(getAllMoves(secondTurn).isEmpty()) System.out.println("Stalemate!");
+        if(!checkmate)
+        {
+            if(checkStaleMate()) System.out.println("Stalemate!");
+        }
+
+        System.out.println(moves);
+    }
+
+    private boolean checkStaleMate()
+    {
+        if(getAllMoves(secondTurn).isEmpty()) return true;
+        //Repeat position three times (maybe 5)
+        //Fifty moves without pawn move or capture (maybe 75)
+        //King v. King, King and Bishop v. King, King and Knight v. King, King and Bishop v. King and Bishop (Same Color)
+
+        return false;
     }
 
     public void draw(Graphics2D g2d)
@@ -253,7 +283,8 @@ public class Board
                     selectFlag = false;
                 }
             }
-        } else
+        }
+        else
         {
             switch(promotingHover)
             {
@@ -273,6 +304,7 @@ public class Board
                     return;
             }
 
+            moves += pieces[promotingCol][promotingRow].getID();
             promoting = false;
             secondTurn = !secondTurn;
         }
@@ -302,7 +334,8 @@ public class Board
 
                     movePiece(mouseCol, mouseRow);
                 }
-            } else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
+            }
+            else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
 
             currentPiece = null;
         }
@@ -330,19 +363,27 @@ public class Board
                 }
             }
 
+            boolean enPassant = false;
+            int castlingRookOriginalCol = -1;
+            int castlingRookNewCol = -1;
+
             if(currentPiece instanceof King && Math.abs(mouseCol - currentPiece.getCol()) == 2)
             {
                 Piece rook;
                 if(mouseCol > currentPiece.getCol()) rook = pieces[7][currentPiece.getRow()];
                 else rook = pieces[0][currentPiece.getRow()];
 
+                castlingRookOriginalCol = rook.getCol();
                 pieces[mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol())][currentPiece.getRow()] = rook;
                 pieces[rook.getCol()][rook.getRow()] = null;
 
                 rook.setPosition(mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol()),
                         currentPiece.getRow());
                 rook.setMoved();
-            } else if(currentPiece instanceof Pawn)
+
+                castlingRookNewCol = rook.getCol();
+            }
+            else if(currentPiece instanceof Pawn)
             {
                 Pawn pawn = (Pawn) currentPiece;
                 if(Math.abs(pawn.getRow() - mouseRow) == 2) pawn.setCanEnPassant(true);
@@ -356,6 +397,7 @@ public class Board
                                 mouseCol == pawn.getCol() - 1)
                         {
                             pieces[pawn.getCol() - 1][pawn.getRow()] = null;
+                            enPassant = true;
                         }
                     }
                 }
@@ -368,28 +410,62 @@ public class Board
                                 mouseCol == pawn.getCol() + 1)
                         {
                             pieces[pawn.getCol() + 1][pawn.getRow()] = null;
+                            enPassant = true;
                         }
                     }
                 }
+            }
+
+            if(castlingRookNewCol == -1)
+            {
+                if(!enPassant)
+                {
+                    moves += currentPiece.getID();
+                    moves += currentPiece.getCol() + "" + currentPiece.getRow();
+                    moves += mouseCol + "" + mouseRow;
+                    if(pieces[mouseCol][mouseRow] == null) moves += "//";
+                    else moves += pieces[mouseCol][mouseRow].getID();
+                }
+                else
+                {
+                    moves += "EN";
+                    moves += currentPiece.getCol() + "" + currentPiece.getRow();
+                    moves += mouseCol + "" + mouseRow;
+                    moves += mouseCol + "" + currentPiece.getRow();
+                    moves += "//";
+                }
+            }
+            else
+            {
+                moves += "CA";
+                moves += currentPiece.getCol() + "" + currentPiece.getRow();
+                moves += mouseCol + "" + mouseRow;
+                moves += castlingRookOriginalCol + "" + mouseRow;
+                moves += castlingRookNewCol + "" + mouseRow;
             }
 
             pieces[mouseCol][mouseRow] = currentPiece;
             currentPiece.setPosition(mouseCol, mouseRow);
             currentPiece.setMoved();
 
-            //Check for Pawn promotion
-            if(currentPiece instanceof Pawn && ((currentPiece.isSecond() && currentPiece.getRow() == 7) ||
-                    (!currentPiece.isSecond() && currentPiece.getRow() == 0)))
+            if(!enPassant && castlingRookNewCol == -1)
             {
-                promoting = true;
-                promotingCol = currentPiece.getCol();
-                promotingRow = currentPiece.getRow();
-            } else
-            {
-                secondTurn = !secondTurn;
+                //Check for Pawn promotion
+                if(currentPiece instanceof Pawn && ((currentPiece.isSecond() && currentPiece.getRow() == 7) ||
+                        (!currentPiece.isSecond() && currentPiece.getRow() == 0)))
+                {
+                    promoting = true;
+                    promotingCol = currentPiece.getCol();
+                    promotingRow = currentPiece.getRow();
+
+                    return;
+                }
+                else moves += "//";
             }
+
+            secondTurn = !secondTurn;
         }
-        //Otherwise, deactivate the select mode and revert the position of the current piece
+        //Otherwise, revert the position of the current piece
         else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
     }
 

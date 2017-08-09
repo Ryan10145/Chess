@@ -65,4 +65,9 @@ public class Knight extends Piece
             }
         }
     }
+
+    public String getID()
+    {
+        return "KN";
+    }
 }

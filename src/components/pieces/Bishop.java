@@ -100,4 +100,9 @@ public class Bishop extends Piece
             if(!(checkUpwardsDiagonal || checkDownwardsDiagonal)) break;
         }
     }
+
+    public String getID()
+    {
+        return "BI";
+    }
 }

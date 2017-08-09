@@ -148,4 +148,9 @@ public class King extends Piece
             }
         }
     }
+
+    public String getID()
+    {
+        return "KI";
+    }
 }

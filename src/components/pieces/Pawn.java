@@ -86,4 +86,9 @@ public class Pawn extends Piece
     {
         return canEnPassant;
     }
+
+    public String getID()
+    {
+        return "PA";
+    }
 }

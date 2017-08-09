@@ -156,4 +156,9 @@ public class Queen extends Piece
             else break;
         }
     }
+
+    public String getID()
+    {
+        return "QU";
+    }
 }

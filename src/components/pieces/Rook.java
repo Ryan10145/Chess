@@ -74,4 +74,9 @@ public class Rook extends Piece
             else break;
         }
     }
+
+    public String getID()
+    {
+        return "RO";
+    }
 }
