@@ -119,13 +119,39 @@ public abstract class Piece
         return piece == null || piece.second != this.second;
     }
 
-    public void setMoved()
+    public void setMoved(boolean moved)
     {
-        hasMoved = true;
+        hasMoved = moved;
     }
 
     public boolean isSecond()
     {
         return second;
+    }
+
+    public boolean getMoved()
+    {
+        return hasMoved;
+    }
+
+    public static Piece parseID(String id, boolean secondTurn, int col, int row)
+    {
+        switch(id)
+        {
+            case "BI":
+                return new Bishop(secondTurn, col, row);
+            case "KI":
+                return new King(secondTurn, col, row);
+            case "KN":
+                return new Knight(secondTurn, col, row);
+            case "PA":
+                return new Pawn(secondTurn, col, row);
+            case "QU":
+                return new Queen(secondTurn, col, row);
+            case "RO":
+                return new Rook(secondTurn, col, row);
+            default:
+                return null;
+        }
     }
 }

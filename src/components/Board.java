@@ -4,6 +4,7 @@ import components.pieces.*;
 import utility.Images;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.util.HashMap;
@@ -26,20 +27,9 @@ public class Board
     private int promotingRow;
     private int promotingHover;
     private String moves;
-    //Syntax for Moves:
-    //Two Characters for Piece, Two Numbers for col/row of src, Two Numbers for col/row of destination
-    //Then, if it was a take, put the id of the take. Otherwise, put a //
-    //Then, if it was a promotion, put the id of the new piece. Otherwise put a //
-
-    //If it was a castle, then put CA, then both the original king col/row, new king col/row,
-    //original rook col/row, and then new rook col/row
-
-    //If it was a en passant, then put EN, then put the original pawn col/row, the new pawn col/row ,
-    //taken pawn col/row, and then //
+    private int takenPieceHadMoved;
 
     //TODO Stalemate
-    //TODO Fix bug where taking a piece and then the piece color is drawn incorrectly
-    //TODO Undo Moves
 
     public Board(int x, int y)
     {
@@ -94,8 +84,19 @@ public class Board
 
     public void update()
     {
-        boolean checkmate = true;
+        boolean checkmate = checkCheckMate();
+        if(checkmate)
+        {
+            System.out.println((secondTurn ? "Black" : "White") + "Wins!");
+        }
+        else
+        {
+            if(checkStaleMate()) System.out.println("Stalemate!");
+        }
+    }
 
+    private boolean checkCheckMate()
+    {
         if(!selectFlag && currentPiece == null)
         {
             if(isCheck(pieces, secondTurn))
@@ -109,28 +110,16 @@ public class Board
                             if(piece.isSecond() == secondTurn)
                             {
                                 piece.calculateMoves(pieces);
-                                if(!piece.getMoves().isEmpty())
-                                {
-                                    checkmate = false;
-                                    break;
-                                }
+                                if(!piece.getMoves().isEmpty()) return false;
                             }
                         }
                     }
-
-                    if(!checkmate) break;
                 }
 
-                if(checkmate) System.out.println(secondTurn ? "White Wins!" : "Black Wins!");
+                return true;
             }
         }
-
-        if(!checkmate)
-        {
-            if(checkStaleMate()) System.out.println("Stalemate!");
-        }
-
-        System.out.println(moves);
+        return false;
     }
 
     private boolean checkStaleMate()
@@ -148,103 +137,102 @@ public class Board
         AffineTransform transform = g2d.getTransform();
         g2d.translate(x, y);
 
-        //Flag to make sure that the checks for the draw hover is only drawn when not found yet
-        boolean drewHover = false;
+        drawBoard(g2d);
+        if(hoverCol != -1 && hoverRow != -1 && !promoting && !selectFlag) drawHover(g2d);
+        if(selectFlag) drawSelectionMode(g2d);
+        if(currentPiece != null) currentPiece.draw(g2d, TILE_LENGTH, currentPieceX - x, currentPieceY - y);
+        if(promoting) drawPromotion(g2d);
+
+        g2d.setTransform(transform);
+    }
+
+    private void drawBoard(Graphics2D g2d)
+    {
         for(int col = 0; col < pieces.length; col++)
         {
             for(int row = 0; row < pieces[0].length; row++)
             {
-                //Draw the board
+                //Set the board colors to be alternating
                 if((col + row) % 2 == 0) g2d.setColor(new Color(255, 255, 224));
                 else g2d.setColor(new Color(130, 82, 1));
 
                 g2d.fillRect(col * TILE_LENGTH, row * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
 
-                //Draw the hover if it is not drawn yet
-                if(hoverCol != -1 && hoverRow != -1)
-                {
-                    Piece hoverPiece = pieces[hoverCol][hoverRow];
-                    if(!drewHover && !selectFlag && !promoting && hoverPiece != null)
-                    {
-                        if(hoverPiece.isSecond() == this.secondTurn &&
-                                hoverPiece.getCol() == col && hoverPiece.getRow() == row)
-                        {
-                            g2d.setColor(new Color(152, 251, 152, 150));
-                            g2d.fillRect(col * TILE_LENGTH, row * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
-                            drewHover = true;
-                        }
-                    }
-                }
-
                 Piece piece = pieces[col][row];
                 if(piece != null) piece.draw(g2d, TILE_LENGTH);
             }
         }
+    }
 
-        //Draw the select mode
-        if(selectFlag)
+    private void drawHover(Graphics2D g2d)
+    {
+        Piece hoverPiece = pieces[hoverCol][hoverRow];
+        if(hoverPiece != null)
         {
-            //Color the current piece square
-            g2d.setColor(new Color(30, 144, 255, 150));
-            g2d.fillRect(currentPiece.getCol() * TILE_LENGTH, currentPiece.getRow() * TILE_LENGTH,
-                    TILE_LENGTH, TILE_LENGTH);
+            if(hoverPiece.isSecond() == this.secondTurn)
+            {
+                g2d.setColor(new Color(152, 251, 152, 150));
+                g2d.fillRect(hoverCol * TILE_LENGTH, hoverRow * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
+            }
+        }
+    }
 
-            //Color all possible movement options
+    private void drawSelectionMode(Graphics2D g2d)
+    {
+        //Color the current piece square
+        g2d.setColor(new Color(30, 144, 255, 150));
+        g2d.fillRect(currentPiece.getCol() * TILE_LENGTH, currentPiece.getRow() * TILE_LENGTH,
+                TILE_LENGTH, TILE_LENGTH);
+
+        //Color all possible movement options
+        if(currentPiece != null)
+        {
+            currentPiece.calculateMoves(pieces);
+
             if(currentPiece != null)
             {
-                currentPiece.calculateMoves(pieces);
-
-                if(currentPiece != null)
+                for(int[] location : currentPiece.getMoves())
                 {
-                    for(int[] location : currentPiece.getMoves())
-                    {
-                        if(location[0] == hoverCol && location[1] == hoverRow)
-                            g2d.setColor(new Color(152, 251, 152, 150));
-                        else g2d.setColor(new Color(255, 102, 102, 150));
-                        g2d.fillRect(location[0] * TILE_LENGTH, location[1] * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
-                    }
+                    if(location[0] == hoverCol && location[1] == hoverRow)
+                        g2d.setColor(new Color(152, 251, 152, 150));
+                    else g2d.setColor(new Color(255, 102, 102, 150));
+                    g2d.fillRect(location[0] * TILE_LENGTH, location[1] * TILE_LENGTH, TILE_LENGTH, TILE_LENGTH);
                 }
             }
         }
+    }
 
-        //Draw the current dragged/selected piece
-        if(currentPiece != null) currentPiece.draw(g2d, TILE_LENGTH, currentPieceX - x, currentPieceY - y);
+    private void drawPromotion(Graphics2D g2d)
+    {
+        AffineTransform transform2 = g2d.getTransform();
+        g2d.translate((promotingCol - 1.75) * TILE_LENGTH, (promotingRow + 0.75) * TILE_LENGTH);
+        if(promotingCol == 7) g2d.translate(-TILE_LENGTH * 3.0 / 4, 0);
+        if(promotingCol == 0) g2d.translate(TILE_LENGTH * 3.0 / 4, 0);
 
-        //Draw the promotion menu
-        if(promoting)
+        g2d.setColor(new Color(192, 192, 192, 210));
+        g2d.fillRect(0, 0, TILE_LENGTH * 4 + 25, TILE_LENGTH + 10);
+
+        if(promotingHover != -1)
         {
-            AffineTransform transform2 = g2d.getTransform();
-            g2d.translate((promotingCol - 1.75) * TILE_LENGTH, (promotingRow + 0.75) * TILE_LENGTH);
-            if(promotingCol == 7) g2d.translate(-TILE_LENGTH * 3.0 / 4, 0);
-            if(promotingCol == 0) g2d.translate(TILE_LENGTH * 3.0 / 4, 0);
-
-            g2d.setColor(new Color(192, 192, 192, 210));
-            g2d.fillRect(0, 0, TILE_LENGTH * 4 + 25, TILE_LENGTH + 10);
-
-            if(promotingHover != -1)
-            {
-                g2d.setColor(new Color(152, 251, 152, 150));
-                g2d.fillRect((5 * (promotingHover + 1)) + promotingHover * TILE_LENGTH, 5, TILE_LENGTH, TILE_LENGTH);
-            }
-
-            if(secondTurn)
-            {
-                g2d.drawImage(Images.BLACK.BISHOP, 5, 5, TILE_LENGTH, TILE_LENGTH, null);
-                g2d.drawImage(Images.BLACK.KNIGHT, 10 + TILE_LENGTH, 5, TILE_LENGTH, TILE_LENGTH, null);
-                g2d.drawImage(Images.BLACK.ROOK, 15 + TILE_LENGTH * 2, 5, TILE_LENGTH, TILE_LENGTH, null);
-                g2d.drawImage(Images.BLACK.QUEEN, 20 + TILE_LENGTH * 3, 5, TILE_LENGTH, TILE_LENGTH, null);
-            } else
-            {
-                g2d.drawImage(Images.WHITE.BISHOP, 5, 5, TILE_LENGTH, TILE_LENGTH, null);
-                g2d.drawImage(Images.WHITE.KNIGHT, 10 + TILE_LENGTH, 5, TILE_LENGTH, TILE_LENGTH, null);
-                g2d.drawImage(Images.WHITE.ROOK, 15 + TILE_LENGTH * 2, 5, TILE_LENGTH, TILE_LENGTH, null);
-                g2d.drawImage(Images.WHITE.QUEEN, 20 + TILE_LENGTH * 3, 5, TILE_LENGTH, TILE_LENGTH, null);
-            }
-
-            g2d.setTransform(transform2);
+            g2d.setColor(new Color(152, 251, 152, 150));
+            g2d.fillRect((5 * (promotingHover + 1)) + promotingHover * TILE_LENGTH, 5, TILE_LENGTH, TILE_LENGTH);
         }
 
-        g2d.setTransform(transform);
+        if(secondTurn)
+        {
+            g2d.drawImage(Images.BLACK.BISHOP, 5, 5, TILE_LENGTH, TILE_LENGTH, null);
+            g2d.drawImage(Images.BLACK.KNIGHT, 10 + TILE_LENGTH, 5, TILE_LENGTH, TILE_LENGTH, null);
+            g2d.drawImage(Images.BLACK.ROOK, 15 + TILE_LENGTH * 2, 5, TILE_LENGTH, TILE_LENGTH, null);
+            g2d.drawImage(Images.BLACK.QUEEN, 20 + TILE_LENGTH * 3, 5, TILE_LENGTH, TILE_LENGTH, null);
+        } else
+        {
+            g2d.drawImage(Images.WHITE.BISHOP, 5, 5, TILE_LENGTH, TILE_LENGTH, null);
+            g2d.drawImage(Images.WHITE.KNIGHT, 10 + TILE_LENGTH, 5, TILE_LENGTH, TILE_LENGTH, null);
+            g2d.drawImage(Images.WHITE.ROOK, 15 + TILE_LENGTH * 2, 5, TILE_LENGTH, TILE_LENGTH, null);
+            g2d.drawImage(Images.WHITE.QUEEN, 20 + TILE_LENGTH * 3, 5, TILE_LENGTH, TILE_LENGTH, null);
+        }
+
+        g2d.setTransform(transform2);
     }
 
     public void mousePressed(MouseEvent e)
@@ -254,10 +242,9 @@ public class Board
 
         if(!promoting)
         {
-            //Check if the mouse is within the board
-            if(mouseCol >= 0 && mouseCol < pieces.length &&
-                    mouseRow >= 0 && mouseRow < pieces[0].length)
+            if(checkBoardBounds(mouseCol, mouseRow))
             {
+                //Pick up the piece and start dragging it
                 if(!selectFlag)
                 {
                     //Check if the square has a piece
@@ -274,7 +261,7 @@ public class Board
                         }
                     }
                 }
-                //Selection Mode
+                //Move a piece with selection mode
                 else if(currentPiece != null)
                 {
                     movePiece(mouseCol, mouseRow);
@@ -284,6 +271,7 @@ public class Board
                 }
             }
         }
+        //Interact with the promoting menu
         else
         {
             switch(promotingHover)
@@ -305,6 +293,8 @@ public class Board
             }
 
             moves += pieces[promotingCol][promotingRow].getID();
+            moves += 1;
+            moves += takenPieceHadMoved;
             promoting = false;
             secondTurn = !secondTurn;
         }
@@ -315,25 +305,20 @@ public class Board
         int mouseCol = (e.getX() - x) / TILE_LENGTH;
         int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
-        if(!promoting)
+        if(!promoting && currentPiece != null)
         {
-            //Check if the mouse is within the board
-            if(mouseCol >= 0 && mouseCol < pieces.length &&
-                    mouseRow >= 0 && mouseRow < pieces[0].length)
+            if(checkBoardBounds(mouseCol, mouseRow))
             {
-                if(currentPiece != null)
+                //If the piece is not moved, then go into the select mode
+                if(mouseCol == currentPiece.getCol() && mouseRow == currentPiece.getRow())
                 {
-                    //If the piece is not moved, then go into the select mode
-                    if(mouseCol == currentPiece.getCol() && mouseRow == currentPiece.getRow())
-                    {
-                        selectFlag = true;
-                        setCurrentPieceLocation(x + currentPiece.getCol() * TILE_LENGTH + TILE_LENGTH / 2,
-                                y + currentPiece.getRow() * TILE_LENGTH + TILE_LENGTH / 2);
-                        return;
-                    }
-
-                    movePiece(mouseCol, mouseRow);
+                    selectFlag = true;
+                    setCurrentPieceLocation(x + currentPiece.getCol() * TILE_LENGTH + TILE_LENGTH / 2,
+                            y + currentPiece.getRow() * TILE_LENGTH + TILE_LENGTH / 2);
+                    return;
                 }
+
+                movePiece(mouseCol, mouseRow);
             }
             else pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
 
@@ -356,11 +341,15 @@ public class Board
                     {
                         if(piece.isSecond() == secondTurn)
                         {
-                            Pawn pawn = (Pawn) piece;
-                            pawn.setCanEnPassant(false);
+                            ((Pawn) piece).setCanEnPassant(false);
                         }
                     }
                 }
+            }
+            if(currentPiece instanceof Pawn)
+            {
+                Pawn pawn = (Pawn) currentPiece;
+                if(pawn.canEnPassant()) pawn.setCanEnPassant(false);
             }
 
             boolean enPassant = false;
@@ -379,7 +368,7 @@ public class Board
 
                 rook.setPosition(mouseCol - (int) Math.signum(mouseCol - currentPiece.getCol()),
                         currentPiece.getRow());
-                rook.setMoved();
+                rook.setMoved(true);
 
                 castlingRookNewCol = rook.getCol();
             }
@@ -416,16 +405,27 @@ public class Board
                 }
             }
 
+            //If there was no castle
             if(castlingRookNewCol == -1)
             {
+                //Normal Move Recording
                 if(!enPassant)
                 {
                     moves += currentPiece.getID();
                     moves += currentPiece.getCol() + "" + currentPiece.getRow();
                     moves += mouseCol + "" + mouseRow;
-                    if(pieces[mouseCol][mouseRow] == null) moves += "//";
-                    else moves += pieces[mouseCol][mouseRow].getID();
+                    if(pieces[mouseCol][mouseRow] == null)
+                    {
+                        moves += "//";
+                        takenPieceHadMoved = 0;
+                    }
+                    else
+                    {
+                        moves += pieces[mouseCol][mouseRow].getID();
+                        takenPieceHadMoved = pieces[mouseCol][mouseRow].getMoved() ? 1 : 0;
+                    }
                 }
+                //Adding en passant
                 else
                 {
                     moves += "EN";
@@ -433,8 +433,11 @@ public class Board
                     moves += mouseCol + "" + mouseRow;
                     moves += mouseCol + "" + currentPiece.getRow();
                     moves += "//";
+                    moves += 1;
+                    moves += 1;
                 }
             }
+            //Adding castle
             else
             {
                 moves += "CA";
@@ -442,11 +445,14 @@ public class Board
                 moves += mouseCol + "" + mouseRow;
                 moves += castlingRookOriginalCol + "" + mouseRow;
                 moves += castlingRookNewCol + "" + mouseRow;
+                moves += 0;
+                moves += 0;
             }
 
             pieces[mouseCol][mouseRow] = currentPiece;
             currentPiece.setPosition(mouseCol, mouseRow);
-            currentPiece.setMoved();
+            int hadMoved = currentPiece.getMoved() ? 1 : 0;
+            currentPiece.setMoved(true);
 
             if(!enPassant && castlingRookNewCol == -1)
             {
@@ -461,6 +467,8 @@ public class Board
                     return;
                 }
                 else moves += "//";
+                moves += hadMoved;
+                moves += takenPieceHadMoved;
             }
 
             secondTurn = !secondTurn;
@@ -501,8 +509,7 @@ public class Board
             int mouseCol = (e.getX() - x) / TILE_LENGTH;
             int mouseRow = (e.getY() - y) / TILE_LENGTH;
 
-            if(mouseCol >= 0 && mouseCol < pieces.length &&
-                    mouseRow >= 0 && mouseRow < pieces[0].length)
+            if(checkBoardBounds(mouseCol, mouseRow))
             {
                 hoverCol = mouseCol;
                 hoverRow = mouseRow;
@@ -530,6 +537,19 @@ public class Board
             hoverCol = -1;
             hoverRow = -1;
         }
+
+//        if(checkBoardBounds(hoverCol, hoverRow))
+//        {
+//            if(pieces[hoverCol][hoverRow] != null && pieces[hoverCol][hoverRow] instanceof Pawn)
+//            {
+//                System.out.println(((Pawn) pieces[hoverCol][hoverRow]).canEnPassant());
+//            }
+//        }
+    }
+
+    public void keyPressed(KeyEvent e)
+    {
+        undoLastMove();
     }
 
     private void setCurrentPieceLocation(int x, int y)
@@ -609,5 +629,120 @@ public class Board
         }
 
         return moves;
+    }
+
+    private boolean checkBoardBounds(int mouseCol, int mouseRow)
+    {
+        return mouseCol >= 0 && mouseCol < pieces.length &&
+                mouseRow >= 0 && mouseRow < pieces[0].length;
+    }
+
+    private void undoLastMove()
+    {
+        if(!moves.isEmpty() && !promoting)
+        {
+            selectFlag = false;
+
+            String lastMove = moves.substring(moves.length() - 12, moves.length());
+            String id = lastMove.substring(0, 2);
+            if(id.equals("CA"))
+            {
+                int moveData = Integer.parseInt(lastMove.substring(2, 10));
+                int rookDestRow = moveData % 10;
+                moveData /= 10;
+                int rookDestCol = moveData % 10;
+                moveData /= 10;
+                int rookSrcRow = moveData % 10;
+                moveData /= 10;
+                int rookSrcCol = moveData % 10;
+                moveData /= 10;
+                int kingDestRow = moveData % 10;
+                moveData /= 10;
+                int kingDestCol = moveData % 10;
+                moveData /= 10;
+                int kingSrcRow = moveData % 10;
+                moveData /= 10;
+                int kingSrcCol = moveData % 10;
+
+                pieces[rookSrcCol][rookSrcRow] = pieces[rookDestCol][rookDestRow];
+                pieces[rookSrcCol][rookSrcRow].setPosition(rookSrcCol, rookSrcRow);
+                pieces[rookSrcCol][rookSrcRow].setMoved(false);
+
+                pieces[rookDestCol][rookDestRow] = null;
+
+                pieces[kingSrcCol][kingSrcRow] = pieces[kingDestCol][kingDestRow];
+                pieces[kingSrcCol][kingSrcRow].setPosition(kingSrcCol, kingSrcRow);
+                pieces[kingSrcCol][kingSrcRow].setMoved(false);
+
+                pieces[kingDestCol][kingDestRow] = null;
+            }
+            else if(id.equals("EN"))
+            {
+                int moveData = Integer.parseInt(lastMove.substring(2, 8));
+                int takeRow = moveData % 10;
+                moveData /= 10;
+                int takeCol = moveData % 10;
+                moveData /= 10;
+                int destRow = moveData % 10;
+                moveData /= 10;
+                int destCol = moveData % 10;
+                moveData /= 10;
+                int srcRow = moveData % 10;
+                moveData /= 10;
+                int srcCol = moveData % 10;
+
+                pieces[srcCol][srcRow] = pieces[destCol][destRow];
+                pieces[srcCol][srcRow].setPosition(srcCol, srcRow);
+                pieces[srcCol][srcRow].setMoved(Integer.parseInt(lastMove.substring(10, 11)) == 1);
+
+                pieces[destCol][destRow] = null;
+
+                pieces[takeCol][takeRow] = new Pawn(!pieces[srcCol][srcRow].isSecond(), takeCol, takeRow);
+                pieces[takeCol][takeRow].setMoved(true);
+                ((Pawn) pieces[takeCol][takeRow]).setCanEnPassant(true);
+            }
+            else
+            {
+                int moveData = Integer.parseInt(lastMove.substring(2, 6));
+                int destRow = moveData % 10;
+                moveData /= 10;
+                int destCol = moveData % 10;
+                moveData /= 10;
+                int srcRow = moveData % 10;
+                moveData /= 10;
+                int srcCol = moveData % 10;
+
+                pieces[srcCol][srcRow] = pieces[destCol][destRow];
+                pieces[srcCol][srcRow].setPosition(srcCol, srcRow);
+                pieces[srcCol][srcRow].setMoved(Integer.parseInt(lastMove.substring(10, 11)) == 1);
+
+                Piece replacePiece = Piece.parseID(lastMove.substring(6, 8), !pieces[srcCol][srcRow].isSecond(), destCol, destRow);
+                pieces[destCol][destRow] = replacePiece;
+                if(replacePiece != null) pieces[destCol][destRow].setMoved(Integer.parseInt(lastMove.substring(11, 12)) == 1);
+            }
+
+            secondTurn = !secondTurn;
+            moves = moves.substring(0, moves.length() - 12);
+
+            if(currentPiece != null)
+            {
+                pieces[currentPiece.getCol()][currentPiece.getRow()] = currentPiece;
+                currentPiece = null;
+            }
+
+            //Syntax for Moves:
+            //Two Characters for Piece, Two Numbers for col/row of src, Two Numbers for col/row of destination
+            //Then, if it was a take, put the id of the take. Otherwise, put a //
+            //Then, if it was a promotion, the new piece
+
+            //If it was a castle, then put CA, then both the original king col/row, new king col/row,
+            //original rook col/row, and then new rook col/row
+
+            //If it was a en passant, then put EN, then put the original pawn col/row, the new pawn col/row ,
+            //taken pawn col/row, and then //
+
+            //At the end, put a 0 if the prior to the move, the piece had not moved, and 1 if the piece had already moved
+            //Then, put a number using the top logic, but with the taken piece, and 0 if there was no taken piece
+        }
     }
 }

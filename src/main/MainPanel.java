@@ -4,12 +4,10 @@ import components.Board;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
-public class MainPanel extends JPanel implements Runnable, MouseListener, MouseMotionListener
+public class MainPanel extends JPanel implements Runnable, MouseListener, MouseMotionListener, KeyListener
 {
     public static final int WIDTH = 600;
     public static final int HEIGHT = 600;
@@ -40,6 +38,7 @@ public class MainPanel extends JPanel implements Runnable, MouseListener, MouseM
         {
             this.addMouseListener(this);
             this.addMouseMotionListener(this);
+            this.addKeyListener(this);
             updateThread = new Thread(this);
             updateThread.start();
         }
@@ -141,5 +140,20 @@ public class MainPanel extends JPanel implements Runnable, MouseListener, MouseM
     public void mouseMoved(MouseEvent e)
     {
         board.mouseMoved(e);
+    }
+
+    public void keyTyped(KeyEvent e)
+    {
+
+    }
+
+    public void keyPressed(KeyEvent e)
+    {
+        board.keyPressed(e);
+    }
+
+    public void keyReleased(KeyEvent e)
+    {
+
     }
 }
