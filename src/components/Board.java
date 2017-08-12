@@ -645,80 +645,87 @@ public class Board
 
             String lastMove = moves.substring(moves.length() - 12, moves.length());
             String id = lastMove.substring(0, 2);
-            if(id.equals("CA"))
+            switch(id)
             {
-                int moveData = Integer.parseInt(lastMove.substring(2, 10));
-                int rookDestRow = moveData % 10;
-                moveData /= 10;
-                int rookDestCol = moveData % 10;
-                moveData /= 10;
-                int rookSrcRow = moveData % 10;
-                moveData /= 10;
-                int rookSrcCol = moveData % 10;
-                moveData /= 10;
-                int kingDestRow = moveData % 10;
-                moveData /= 10;
-                int kingDestCol = moveData % 10;
-                moveData /= 10;
-                int kingSrcRow = moveData % 10;
-                moveData /= 10;
-                int kingSrcCol = moveData % 10;
+                case "CA":
+                {
+                    int moveData = Integer.parseInt(lastMove.substring(2, 10));
+                    int rookDestRow = moveData % 10;
+                    moveData /= 10;
+                    int rookDestCol = moveData % 10;
+                    moveData /= 10;
+                    int rookSrcRow = moveData % 10;
+                    moveData /= 10;
+                    int rookSrcCol = moveData % 10;
+                    moveData /= 10;
+                    int kingDestRow = moveData % 10;
+                    moveData /= 10;
+                    int kingDestCol = moveData % 10;
+                    moveData /= 10;
+                    int kingSrcRow = moveData % 10;
+                    moveData /= 10;
+                    int kingSrcCol = moveData % 10;
 
-                pieces[rookSrcCol][rookSrcRow] = pieces[rookDestCol][rookDestRow];
-                pieces[rookSrcCol][rookSrcRow].setPosition(rookSrcCol, rookSrcRow);
-                pieces[rookSrcCol][rookSrcRow].setMoved(false);
+                    pieces[rookSrcCol][rookSrcRow] = pieces[rookDestCol][rookDestRow];
+                    pieces[rookSrcCol][rookSrcRow].setPosition(rookSrcCol, rookSrcRow);
+                    pieces[rookSrcCol][rookSrcRow].setMoved(false);
 
-                pieces[rookDestCol][rookDestRow] = null;
+                    pieces[rookDestCol][rookDestRow] = null;
 
-                pieces[kingSrcCol][kingSrcRow] = pieces[kingDestCol][kingDestRow];
-                pieces[kingSrcCol][kingSrcRow].setPosition(kingSrcCol, kingSrcRow);
-                pieces[kingSrcCol][kingSrcRow].setMoved(false);
+                    pieces[kingSrcCol][kingSrcRow] = pieces[kingDestCol][kingDestRow];
+                    pieces[kingSrcCol][kingSrcRow].setPosition(kingSrcCol, kingSrcRow);
+                    pieces[kingSrcCol][kingSrcRow].setMoved(false);
 
-                pieces[kingDestCol][kingDestRow] = null;
-            }
-            else if(id.equals("EN"))
-            {
-                int moveData = Integer.parseInt(lastMove.substring(2, 8));
-                int takeRow = moveData % 10;
-                moveData /= 10;
-                int takeCol = moveData % 10;
-                moveData /= 10;
-                int destRow = moveData % 10;
-                moveData /= 10;
-                int destCol = moveData % 10;
-                moveData /= 10;
-                int srcRow = moveData % 10;
-                moveData /= 10;
-                int srcCol = moveData % 10;
+                    pieces[kingDestCol][kingDestRow] = null;
+                    break;
+                }
+                case "EN":
+                {
+                    int moveData = Integer.parseInt(lastMove.substring(2, 8));
+                    int takeRow = moveData % 10;
+                    moveData /= 10;
+                    int takeCol = moveData % 10;
+                    moveData /= 10;
+                    int destRow = moveData % 10;
+                    moveData /= 10;
+                    int destCol = moveData % 10;
+                    moveData /= 10;
+                    int srcRow = moveData % 10;
+                    moveData /= 10;
+                    int srcCol = moveData % 10;
 
-                pieces[srcCol][srcRow] = pieces[destCol][destRow];
-                pieces[srcCol][srcRow].setPosition(srcCol, srcRow);
-                pieces[srcCol][srcRow].setMoved(Integer.parseInt(lastMove.substring(10, 11)) == 1);
+                    pieces[srcCol][srcRow] = pieces[destCol][destRow];
+                    pieces[srcCol][srcRow].setPosition(srcCol, srcRow);
+                    pieces[srcCol][srcRow].setMoved(Integer.parseInt(lastMove.substring(10, 11)) == 1);
 
-                pieces[destCol][destRow] = null;
+                    pieces[destCol][destRow] = null;
 
-                pieces[takeCol][takeRow] = new Pawn(!pieces[srcCol][srcRow].isSecond(), takeCol, takeRow);
-                pieces[takeCol][takeRow].setMoved(true);
-                ((Pawn) pieces[takeCol][takeRow]).setCanEnPassant(true);
-            }
-            else
-            {
-                int moveData = Integer.parseInt(lastMove.substring(2, 6));
-                int destRow = moveData % 10;
-                moveData /= 10;
-                int destCol = moveData % 10;
-                moveData /= 10;
-                int srcRow = moveData % 10;
-                moveData /= 10;
-                int srcCol = moveData % 10;
+                    pieces[takeCol][takeRow] = new Pawn(!pieces[srcCol][srcRow].isSecond(), takeCol, takeRow);
+                    pieces[takeCol][takeRow].setMoved(true);
+                    ((Pawn) pieces[takeCol][takeRow]).setCanEnPassant(true);
+                    break;
+                }
+                default:
+                {
+                    int moveData = Integer.parseInt(lastMove.substring(2, 6));
+                    int destRow = moveData % 10;
+                    moveData /= 10;
+                    int destCol = moveData % 10;
+                    moveData /= 10;
+                    int srcRow = moveData % 10;
+                    moveData /= 10;
+                    int srcCol = moveData % 10;
 
-                pieces[srcCol][srcRow] = pieces[destCol][destRow];
-                pieces[srcCol][srcRow].setPosition(srcCol, srcRow);
-                pieces[srcCol][srcRow].setMoved(Integer.parseInt(lastMove.substring(10, 11)) == 1);
+                    pieces[srcCol][srcRow] = pieces[destCol][destRow];
+                    pieces[srcCol][srcRow].setPosition(srcCol, srcRow);
+                    pieces[srcCol][srcRow].setMoved(Integer.parseInt(lastMove.substring(10, 11)) == 1);
 
-                Piece replacePiece = Piece.parseID(lastMove.substring(6, 8), !pieces[srcCol][srcRow].isSecond(), destCol, destRow);
-                pieces[destCol][destRow] = replacePiece;
-                if(replacePiece != null) pieces[destCol][destRow].setMoved(Integer.parseInt(lastMove.substring(11, 12)) == 1);
+                    Piece replacePiece = Piece.parseID(lastMove.substring(6, 8), !pieces[srcCol][srcRow].isSecond(), destCol, destRow);
+                    pieces[destCol][destRow] = replacePiece;
+                    if(replacePiece != null)
+                        pieces[destCol][destRow].setMoved(Integer.parseInt(lastMove.substring(11, 12)) == 1);
+                    break;
+                }
             }
 
             secondTurn = !secondTurn;
