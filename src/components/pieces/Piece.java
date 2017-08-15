@@ -14,6 +14,7 @@ public abstract class Piece
 
     BufferedImage image;
 
+    //Copy on write array to prevent ConcurrentModificationExceptions
     CopyOnWriteArrayList<int[]> possibleMoves;
     boolean hasMoved;
 
@@ -27,10 +28,13 @@ public abstract class Piece
         hasMoved = false;
     }
 
+    //Returns the id of the piece
     public abstract String getID();
 
+    //Returns all moves without checking for checks
     public abstract void calculateMovesUnfiltered(Piece[][] board);
 
+    //Calculate all moves and filters them
     public void calculateMoves(Piece[][] board)
     {
         calculateMovesUnfiltered(board);
@@ -44,41 +48,42 @@ public abstract class Piece
         int currentCol = col;
         int currentRow = row;
 
+        //ArrayList that contains all locations to remove
         ArrayList<int[]> remove = new ArrayList<>();
 
+        //Filter moves by doing the move, checking if it leaves the king exposed, and then reverting the move
         for(int[] location : possibleMoves)
         {
+            //Grab all values from before the temporary move
             Piece priorPiece = board[location[0]][location[1]];
             Piece currentPiece = board[currentCol][currentRow];
 
+            //Do the temporary move
             board[location[0]][location[1]] = this;
             board[currentCol][currentRow] = null;
+            setPosition(location[0], location[1]);
 
-            col = location[0];
-            row = location[1];
+            //If the move leaves the king in check, add the move to the remove
+            if(Board.isCheck(board, second)) remove.add(location);
 
-            if(Board.isCheck(board, second))
-            {
-                remove.add(location);
-            }
-
+            //Undo the temporary move
             board[currentCol][currentRow] = currentPiece;
             board[location[0]][location[1]] = priorPiece;
-
-            col = currentCol;
-            row = currentRow;
+            setPosition(currentCol, currentRow);
         }
 
+        //Remove everything that was added to the remove
         possibleMoves.removeAll(remove);
     }
 
+    //Returns the current moves, after filtering one small move
     public CopyOnWriteArrayList<int[]> getMoves()
     {
         possibleMoves.removeIf(move -> move[0] == col && move[1] == row);
         return possibleMoves;
     }
 
-    //Must call calculateMoves(board) before using this
+    //Returns whether or not a move is known to be a valid move (NOTE: Must call calculateMoves() before using this)
     public boolean isValidMove(int col, int row)
     {
         for(int[] move : possibleMoves)
@@ -88,16 +93,19 @@ public abstract class Piece
         return false;
     }
 
+    //Draws the piece at its current col and row
     public void draw(Graphics2D g2d, int tileLength)
     {
         g2d.drawImage(image, col * tileLength, row * tileLength, tileLength, tileLength, null);
     }
 
+    //Draws the piece at a given x/y
     public void draw(Graphics2D g2d, int tileLength, int x, int y)
     {
         g2d.drawImage(image, x, y, tileLength, tileLength, null);
     }
 
+    //Sets the col/row
     public void setPosition(int col, int row)
     {
         this.col = col;
@@ -114,6 +122,8 @@ public abstract class Piece
         return row;
     }
 
+    //Returns whether or not the current piece can attack another piece
+    //(NOTE: for null, it will return true, so that it can "attack"/move to empty squares)
     boolean canTake(Piece piece)
     {
         return piece == null || piece.second != this.second;
@@ -124,16 +134,18 @@ public abstract class Piece
         hasMoved = moved;
     }
 
-    public boolean isSecond()
-    {
-        return second;
-    }
-
     public boolean getMoved()
     {
         return hasMoved;
     }
 
+    public boolean isSecond()
+    {
+        return second;
+    }
+
+    //Converts an id and other data into a piece
+    //(NOTE: a non-piece id will return null, which is used to ensure that pieces are not created)
     public static Piece parseID(String id, boolean secondTurn, int col, int row)
     {
         switch(id)
