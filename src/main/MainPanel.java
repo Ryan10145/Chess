@@ -9,8 +9,8 @@ import java.awt.image.BufferedImage;
 
 public class MainPanel extends JPanel implements Runnable, MouseListener, MouseMotionListener, KeyListener
 {
-    public static final int WIDTH = 600;
-    public static final int HEIGHT = 600;
+    private static final int WIDTH = 600;
+    private static final int HEIGHT = 600;
 
     private Thread updateThread;
     private boolean running;
