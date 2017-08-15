@@ -16,7 +16,7 @@ public class Bishop extends Piece
     {
         possibleMoves.clear();
 
-        //Flags for whether to keep checking along the diagonalboard
+        //Flags for whether to keep checking along the diagonal
         boolean checkUpwardsDiagonal = true;
         boolean checkDownwardsDiagonal = true;
 
